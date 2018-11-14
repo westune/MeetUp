@@ -5,4 +5,5 @@
     <string name="title_messages">Messages</string>
     <string name="contact_button">Contact Seller</string>
     <string name="edit_button">Edit Info</string>
+    <string name="sign_in">Sign In</string>
 </resources>
