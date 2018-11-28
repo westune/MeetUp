@@ -3,15 +3,18 @@ package com.example.lorenzo.meetup2
 import android.content.Context
 import android.os.Bundle
 import android.support.v4.app.Fragment
+import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
+import android.widget.ScrollView
 
 class BuyListFragment:Fragment(){
 
     private val LOG = "Buy List Fragment: "
-
+    private var mRecyclerView:RecyclerView? = null
 
     override fun onAttach(context: Context?) {
         Log.d(LOG, "On Attach")

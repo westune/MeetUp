@@ -2,18 +2,32 @@ package com.example.lorenzo.meetup2
 
 import android.content.Context
 import android.os.Bundle
+import android.support.design.widget.FloatingActionButton
 import android.support.v4.app.Fragment
+import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
+import android.widget.EditText
+import com.example.lorenzo.meetup2.model.ChatMessage
+import com.firebase.ui.database.FirebaseRecyclerAdapter
+import kotlinx.android.synthetic.*
 
-class ItemsForSaleFragment:Fragment(){
+class chatFragment:Fragment(), MessageUtil.MessageLoadListener{
 
-    private val LOG = "Items For Sale Fragment"
-    private val LAYOUT = R.layout.items_for_sale_fragment
+    private val LOG:String = "Chat Fragment"
+    private var mFirebaseAdapter:FirebaseRecyclerAdapter<ChatMessage, MessageUtil.MessageViewHolder>? = null
+    private val MESSAGES_CHILD:String = "messages"
+    private val MSG_LENGTH_LIMIT:Int = 150
+    private val ANONYMOUS:String = "anonymous"
 
+    //UI Elements
+    private var mSendButton:FloatingActionButton? = null
+    private val mMessageRecyclerView:RecyclerView = RecyclerView(this.context!!)
+    private var mLinearLayoutManager:LinearLayoutManager? =  null
+    private var mMessageEditText:EditText? = null
 
     override fun onAttach(context: Context?) {
         Log.d(LOG, "On Attach")
@@ -27,14 +41,11 @@ class ItemsForSaleFragment:Fragment(){
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         Log.d(LOG, "On Create View")
-        val view = inflater!!.inflate(LAYOUT, container, false)
-        val button = view.findViewById<Button>(R.id.postButton)
-        button.setOnClickListener{Button ->
-            when(Button.id){
-                R.id.postButton -> showPostView()
-            }
-        }
-        return view
+        mSendButton = container!!.findViewById(R.id.sendButton)
+        mFirebaseAdapter = MessageUtil.Companion.getFirebaseAdapter(this.activity!!, this, mLinearLayoutManager!!, mMessageRecyclerView)
+        mMessageRecyclerView.adapter = mFirebaseAdapter
+
+        return inflater!!.inflate(R.layout.chat_fragment, container, false)
     }
 
     override fun onStart() {
@@ -72,11 +83,7 @@ class ItemsForSaleFragment:Fragment(){
         super.onDestroyView()
     }
 
-    private fun showPostView(){
-        val transaction = fragmentManager!!.beginTransaction()
-        val fragment = PostItemFragment()
-        transaction.replace(R.id.fragment_layout, fragment)
-        transaction.addToBackStack(null)
-        transaction.commit()
+    override fun onLoadComplete() {
+
     }
 }

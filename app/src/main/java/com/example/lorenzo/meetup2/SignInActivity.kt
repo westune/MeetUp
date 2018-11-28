@@ -40,7 +40,7 @@ class SignInActivity: AppCompatActivity(), GoogleApiClient.OnConnectionFailedLis
 
         //Configure Google Sign In
         val googleSignInOptions:GoogleSignInOptions = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(R.string.default_web_client_id.toString())
+                .requestIdToken(getString(R.string.default_web_client_id))
                 .requestEmail()
                 .build()
         mGoogleApiClient = GoogleApiClient.Builder(this)
@@ -58,9 +58,7 @@ class SignInActivity: AppCompatActivity(), GoogleApiClient.OnConnectionFailedLis
 
     override fun onClick(v: View?) {
         when(v!!.id){
-            R.id.sign_in_button->{
-                signIn()
-            }
+            R.id.sign_in_button -> signIn()
         }
     }
 
@@ -69,6 +67,7 @@ class SignInActivity: AppCompatActivity(), GoogleApiClient.OnConnectionFailedLis
 
         if(requestCode == RC_SIGN_IN){
             var result:GoogleSignInResult = Auth.GoogleSignInApi.getSignInResultFromIntent(data)
+            Log.d(TAG, resultCode.toString())
             if(result.isSuccess){
                 var account:GoogleSignInAccount? = result.signInAccount
                 firebaseAuthWithGoogle(account!!)

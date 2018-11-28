@@ -20,14 +20,14 @@
             <ImageView
                 android:id="@+id/image"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                tools:srcCompat="@tools:sample/avatars[2]"
+                android:layout_height="178dp"
                 android:src="@drawable/ic_dashboard_black_24dp"
-                />
+                tools:srcCompat="@tools:sample/avatars[2]" />
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="250dp"
+                android:layout_height="7dp"
+                android:layout_weight="1"
                 android:orientation="horizontal">
 
                 <TextView
@@ -44,9 +44,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="3"
-                    android:text="$22"
                     android:gravity="right"
-                    android:maxLines="1"/>
+                    android:maxLines="1"
+                    android:text="$22" />
 
 
             </LinearLayout>
@@ -55,6 +55,7 @@
                 android:id="@+id/description"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_weight="4"
                 android:text="asdlkfjaskldfjalksdjflkajsdklfjalksdjfklajklsdfjkalsdjfklajsdklfj kasdjfklasdlkf jaklsdfj klasdjlkf ajsdlkf jaklsdfjk lasdklf aklsdjf klasjdkf jaklsdjflk ajsdlkf jaklsdfjk lasjdfk lasdkf
                 aslkdfj aklsdjf lkasdjfkl asdjf klasjdfkl ajskldf jlaksdfj klajsdklf jaklsdjf " />
 

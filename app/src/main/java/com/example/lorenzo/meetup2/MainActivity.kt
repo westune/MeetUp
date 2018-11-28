@@ -51,7 +51,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
         mUser = mAuth!!.currentUser
         setContentView(R.layout.activity_main)
 
-        /*
+
         if(mUser == null){
             val intent = Intent(this, SignInActivity::class.java)
             startActivity(intent)
@@ -63,8 +63,6 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
                 mPhotoUrl = mUser!!.photoUrl.toString()
             }
         }
-        */
-
 
         showBuyList()
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener)
