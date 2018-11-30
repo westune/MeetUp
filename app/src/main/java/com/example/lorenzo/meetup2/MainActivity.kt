@@ -1,6 +1,8 @@
 package com.example.lorenzo.meetup2
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -23,6 +25,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
     private var mUserName:String = ""
     private var mPhotoUrl:String = ""
     private var mGoogleApiClient:GoogleApiClient? = null
+    private var permission = arrayOf(android.Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION)
 
     private val mOnNavigationItemSelectedListener = BottomNavigationView.OnNavigationItemSelectedListener { item ->
         when (item.itemId) {
@@ -50,6 +53,11 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
         mAuth = FirebaseAuth.getInstance()
         mUser = mAuth!!.currentUser
         setContentView(R.layout.activity_main)
+
+
+        if(checkSelfPermission(permission[0]) == PackageManager.PERMISSION_DENIED || checkSelfPermission(permission[1]) == PackageManager.PERMISSION_DENIED){
+            requestPermissions(permission, 0)
+        }
 
 
         if(mUser == null){
