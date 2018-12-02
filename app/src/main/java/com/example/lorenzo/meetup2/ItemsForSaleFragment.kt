@@ -41,7 +41,7 @@ class ItemsForSaleFragment : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         Log.d(LOG, "On Create View")
-        val view = inflater!!.inflate(LAYOUT, container, false)
+        val view = inflater.inflate(LAYOUT, container, false)
         recyclerView = view.findViewById(R.id.recyclerView)
         recyclerView.setHasFixedSize(true)
         recyclerView.layoutManager = LinearLayoutManager(this.context)

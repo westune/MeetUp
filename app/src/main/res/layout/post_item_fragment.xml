@@ -16,7 +16,7 @@
             android:layout_height="wrap_content"
             android:ems="10"
             android:inputType="textPersonName"
-            android:text="Title" />
+            android:text="@string/name_default" />
 
 
         <LinearLayout
@@ -32,7 +32,7 @@
                 android:layout_weight="4"
                 android:ems="10"
                 android:inputType="number"
-                android:text="Price" />
+                android:text="@string/price_default" />
 
             <EditText
                 android:id="@+id/zip"
@@ -41,7 +41,7 @@
                 android:layout_weight="4"
                 android:ems="10"
                 android:inputType="number"
-                android:text="Zip Code" />
+                android:text="@string/zip_default" />
 
             <android.support.v7.widget.AppCompatImageButton
                 android:layout_width="wrap_content"
@@ -57,7 +57,7 @@
             android:layout_height="wrap_content"
             android:ems="10"
             android:inputType="textMultiLine"
-            android:text="Description" />
+            android:text="@string/description_default" />
 
         <ImageButton
             android:id="@+id/image"
@@ -68,9 +68,12 @@
         <Button
             android:id="@+id/postButton"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
             android:layout_weight="1"
-            android:text="postButton" />
+            android:textAlignment="center"
+            android:layout_gravity="center"
+            android:paddingLeft="25dp"
+            android:paddingRight="25dp"/>
 
     </LinearLayout>
 

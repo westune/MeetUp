@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.constraint.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
     android:layout_height="match_parent">
 
     <LinearLayout
@@ -15,15 +18,14 @@
             android:orientation="horizontal"
             android:gravity="center">
 
-            <TextView
-                android:id="@+id/Zip"
+            <Spinner
+                android:id="@+id/radius_spinner"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Zip"
-                android:maxLines="1"
-                android:textSize="25sp"
-                android:gravity="center"/>
+                android:layout_weight="6"
+                android:textAlignment="center"
+                android:padding="10dp"
+                />
 
             <EditText
                 android:id="@+id/ZipText"
@@ -34,35 +36,23 @@
                 android:textSize="25sp"
                 android:minWidth="100dp"
                 android:gravity="center"
-                android:maxLength="5"/>
+                android:maxLength="5"
+                android:padding="10dp"/>
 
-            <TextView
-                android:id="@+id/Radius"
+            <android.support.v7.widget.AppCompatImageButton
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="Radius"
-                android:maxLines="1"
-                android:textSize="25sp"
-                android:gravity="center"/>
+                android:src="@drawable/ic_my_location_24px"
+                android:id="@+id/locationButton"
+                android:padding="10dp"/>
 
-            <EditText
-                android:id="@+id/RadiusText"
-                android:layout_width="wrap_content"
-                android:minWidth="100dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:inputType="number"
-                android:textSize="25sp"
-                android:gravity="center"
-                android:maxLength="2"/>
         </LinearLayout>
 
         <android.support.v7.widget.RecyclerView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:visibility="visible"
-            android:focusedByDefault="true"/>
+            android:visibility="visible"/>
     </LinearLayout>
 
 </android.support.constraint.ConstraintLayout>

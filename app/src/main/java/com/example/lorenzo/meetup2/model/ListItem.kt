@@ -1,4 +1,4 @@
-package com.example.lorenzo.meetup2
+package com.example.lorenzo.meetup2.model
 
 class ListItem(name:String, price:Double, photoUrl:String){
 

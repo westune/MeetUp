@@ -3,6 +3,7 @@ package com.example.lorenzo.meetup2
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.Geocoder
 import android.os.Bundle
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -10,12 +11,15 @@ import android.support.design.widget.BottomNavigationView
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.MenuItem
+import android.view.View
+import android.widget.AdapterView
 import com.google.android.gms.common.api.GoogleApiClient
 import kotlinx.android.synthetic.main.activity_main.*
 import com.google.android.gms.auth.api.Auth
 import com.google.android.gms.common.ConnectionResult
 
-class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedListener {
+class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedListener, AdapterView.OnItemSelectedListener {
+
 
     //Fragment Manager
     private val manager = supportFragmentManager
@@ -118,6 +122,14 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
         transaction.replace(R.id.fragment_layout, fragment)
         transaction.addToBackStack(null)
         transaction.commit()
+    }
+
+    override fun onNothingSelected(view: AdapterView<*>?) {
+
+    }
+
+    override fun onItemSelected(adapterView: AdapterView<*>?, view: View?, position: Int, p3: Long) {
+
     }
 
 }
