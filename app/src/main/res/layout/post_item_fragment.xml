@@ -60,10 +60,11 @@
             android:text="@string/description_default" />
 
         <ImageButton
-            android:id="@+id/image"
+            android:id="@+id/imageButton"
             android:layout_width="match_parent"
             android:layout_height="261dp"
-            tools:srcCompat="@tools:sample/avatars" />
+            tools:srcCompat="@tools:sample/avatars"
+            android:background="@drawable/add_image_icon"/>
 
         <Button
             android:id="@+id/postButton"
@@ -73,7 +74,7 @@
             android:textAlignment="center"
             android:layout_gravity="center"
             android:paddingLeft="25dp"
-            android:paddingRight="25dp"/>
+            android:paddingRight="25dp" />
 
     </LinearLayout>
 

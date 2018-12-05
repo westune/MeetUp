@@ -25,7 +25,7 @@ class ItemsForSaleFragment : Fragment() {
     private lateinit var adapter: RecyclerViewAdapter
     private var list: MutableList<Item> = mutableListOf()
     private lateinit var ref: DatabaseReference
-    private var check: Boolean = false
+    private lateinit var postButton:Button
 
 
     override fun onAttach(context: Context?) {
@@ -45,8 +45,8 @@ class ItemsForSaleFragment : Fragment() {
         recyclerView = view.findViewById(R.id.recyclerView)
         recyclerView.setHasFixedSize(true)
         recyclerView.layoutManager = LinearLayoutManager(this.context)
-        val button = view.findViewById<Button>(R.id.postButton)
-        button.setOnClickListener { Button ->
+        postButton = view.findViewById<Button>(R.id.postButton)
+        postButton.setOnClickListener { Button ->
             when (Button.id) {
                 R.id.postButton -> showPostView()
             }
