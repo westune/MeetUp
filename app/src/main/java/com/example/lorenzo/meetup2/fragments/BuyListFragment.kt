@@ -16,6 +16,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
+import com.example.lorenzo.meetup2.MainActivity
 import com.example.lorenzo.meetup2.R
 import com.example.lorenzo.meetup2.model.Item
 import com.example.lorenzo.meetup2.model.RecyclerViewAdapter
@@ -26,11 +27,11 @@ class BuyListFragment : Fragment(), AdapterView.OnItemSelectedListener {
 
     private val LOG = "Buy List Fragment: "
     private lateinit var spinner: Spinner
-    private lateinit var zip: EditText
+    private lateinit var mZipText: EditText
     private val LAYOUT = R.layout.buy_list_fragment
     private lateinit var locationManager: LocationManager
-    private var location: Location? = null
     private lateinit var locationButton: AppCompatImageButton
+    private lateinit var mActivity:MainActivity
     private var distance: Int = 10
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: RecyclerViewAdapter
@@ -51,6 +52,12 @@ class BuyListFragment : Fragment(), AdapterView.OnItemSelectedListener {
             2 -> distance = 50
             3 -> distance = 100
         }
+        if(mZipText.text.toString() != "") {
+            val address = mActivity.getAddress(mZipText.text.toString())
+            if (address != null) {
+                getItemsFromDb(address.longitude, address.latitude)
+            }
+        }
     }
 
     override fun onAttach(context: Context?) {
@@ -61,6 +68,7 @@ class BuyListFragment : Fragment(), AdapterView.OnItemSelectedListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         ref = FirebaseDatabase.getInstance().getReference("Items")
+        mActivity =  activity as MainActivity
         locationManager = activity!!.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         Log.d(LOG, "On Create")
     }
@@ -71,7 +79,7 @@ class BuyListFragment : Fragment(), AdapterView.OnItemSelectedListener {
 
         //Initialize UI Elements
         spinner = view.findViewById(R.id.radius_spinner)
-        zip = view.findViewById(R.id.ZipText)
+        mZipText = view.findViewById(R.id.ZipText)
         locationButton = view.findViewById(R.id.locationButton)
         locationButton.setOnClickListener { Button ->
             when (Button.id) {
@@ -79,19 +87,17 @@ class BuyListFragment : Fragment(), AdapterView.OnItemSelectedListener {
             }
         }
 
-        zip.setOnFocusChangeListener{ v, hasFocus ->
+        mZipText.setOnFocusChangeListener{_, hasFocus ->
             if(!hasFocus) {
                 //hides keyboard
                 (activity!!.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager)
-                    .hideSoftInputFromWindow(zip.windowToken, 0)
-                val address = getAddress()
+                    .hideSoftInputFromWindow(mZipText.windowToken, 0)
+                val address = mActivity.getAddress(mZipText.text.toString())
                 if(address == null){
-                    zip.error = "Please Enter Valid Zip"
+                    mZipText.error = "Please Enter Valid Zip"
                 } else {
                     getItemsFromDb(address.longitude, address.latitude)
                 }
-
-
             } else {
                 // has focus
             }
@@ -114,7 +120,7 @@ class BuyListFragment : Fragment(), AdapterView.OnItemSelectedListener {
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             // Apply the adapter to the spinner
             spinner.adapter = adapter
-            spinner.onItemSelectedListener = context as AdapterView.OnItemSelectedListener
+            spinner.onItemSelectedListener = this
         }
     }
 
@@ -155,35 +161,7 @@ class BuyListFragment : Fragment(), AdapterView.OnItemSelectedListener {
 
     @SuppressLint("MissingPermission")
     private fun setZip() {
-
-        val hasGps = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
-        if (hasGps) {
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0F, object : LocationListener {
-                override fun onLocationChanged(loc: Location?) {
-                    if (loc != null) {
-                        location = loc
-                    }
-                }
-
-                override fun onStatusChanged(p0: String?, p1: Int, p2: Bundle?){}
-                override fun onProviderEnabled(p0: String?) {}
-                override fun onProviderDisabled(p0: String?) {}
-
-            })
-
-            val localGpsLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-            if (localGpsLocation != null) {
-                location = localGpsLocation
-                val geocoder = Geocoder(activity)
-                val address = geocoder.getFromLocation(location!!.latitude, location!!.longitude, 1)
-                zip.setText(address[0].postalCode.toString())
-            }else{
-                Toast.makeText(this.activity, "Unable To Use Location", Toast.LENGTH_LONG).show()
-            }
-        } else {
-            startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
-            return
-        }
+        mZipText.setText(mActivity.getZip())
     }
 
     private fun getItemsFromDb() {
@@ -191,9 +169,7 @@ class BuyListFragment : Fragment(), AdapterView.OnItemSelectedListener {
         val query = ref.orderByChild("lon")
         val thread = Thread {
             query.addValueEventListener(object : ValueEventListener {
-                override fun onCancelled(p0: DatabaseError) {
-                    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-                }
+                override fun onCancelled(p0: DatabaseError) {}
 
                 override fun onDataChange(data: DataSnapshot) {
                     if (data.exists()) {
@@ -208,6 +184,8 @@ class BuyListFragment : Fragment(), AdapterView.OnItemSelectedListener {
         }
         thread.run()
     }
+
+
 
     private fun getItemsFromDb(lon:Double, lat:Double) {
         Log.d("DISTANCE", distance.toString())
@@ -236,13 +214,4 @@ class BuyListFragment : Fragment(), AdapterView.OnItemSelectedListener {
         }
         thread.run()
     }
-
-    private fun getAddress(): Address? {
-        val geocoder = Geocoder(activity)
-        val address = geocoder.getFromLocationName(zip.text.toString(), 1)
-        if(address == null || address.size == 0) {return null}
-        else return address[0]
-    }
-
-
 }

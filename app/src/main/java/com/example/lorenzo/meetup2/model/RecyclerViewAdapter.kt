@@ -12,6 +12,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import com.example.lorenzo.meetup2.fragments.ItemInfoFragment
 import android.support.v4.app.FragmentManager
+import com.example.lorenzo.meetup2.MainActivity
 import com.example.lorenzo.meetup2.R
 import com.squareup.picasso.Picasso
 
@@ -48,7 +49,7 @@ class RecyclerViewAdapter(val list: MutableList<Item>, val context: Context, val
         }
 
         holder.layout.setOnClickListener{
-            showItemInfo(item.name, item.price, item.imageUrl!!, item.description)
+            showItemInfoFragment(item.name, item.price, item.imageUrl!!, item.description)
         }
     }
 
@@ -64,7 +65,7 @@ class RecyclerViewAdapter(val list: MutableList<Item>, val context: Context, val
     }
 
 
-    private fun showItemInfo(name:String, price:String, imageUrl:String, description:String){
+    private fun showItemInfoFragment(name:String, price:String, imageUrl:String, description:String){
         val transaction = fragmentManager.beginTransaction()
         val fragment = ItemInfoFragment()
         val bundle = Bundle()
@@ -74,9 +75,11 @@ class RecyclerViewAdapter(val list: MutableList<Item>, val context: Context, val
         bundle.putString("description", description)
         fragment.arguments = bundle
         transaction.replace(R.id.fragment_layout, fragment)
-        transaction.addToBackStack(null)
         transaction.commit()
     }
+
+
+
 
 
 

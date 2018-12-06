@@ -10,6 +10,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import com.example.lorenzo.meetup2.MainActivity
 import com.example.lorenzo.meetup2.R
 import com.example.lorenzo.meetup2.model.Item
 import com.example.lorenzo.meetup2.model.RecyclerViewAdapter
@@ -24,7 +25,8 @@ class ItemsForSaleFragment : Fragment() {
     private lateinit var adapter: RecyclerViewAdapter
     private var list: MutableList<Item> = mutableListOf()
     private lateinit var ref: DatabaseReference
-    private lateinit var postButton:Button
+    private lateinit var postButton: Button
+    private lateinit var mActivity: MainActivity
 
 
     override fun onAttach(context: Context?) {
@@ -35,6 +37,7 @@ class ItemsForSaleFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(LOG, "On Create")
         ref = FirebaseDatabase.getInstance().getReference("Items")
+        mActivity = activity as MainActivity
         super.onCreate(savedInstanceState)
     }
 
@@ -44,15 +47,13 @@ class ItemsForSaleFragment : Fragment() {
         recyclerView = view.findViewById(R.id.recyclerView)
         recyclerView.setHasFixedSize(true)
         recyclerView.layoutManager = LinearLayoutManager(this.context)
-        postButton = view.findViewById<Button>(R.id.postButton)
+        postButton = view.findViewById(R.id.postButton)
         postButton.setOnClickListener { Button ->
             when (Button.id) {
-                R.id.postButton -> showPostView()
+                R.id.postButton -> mActivity.showPostItemFragment()
             }
         }
         getItemsFromDb()
-
-
         adapter = RecyclerViewAdapter(list, activity!!.applicationContext, fragmentManager!!)
         recyclerView.adapter = adapter
         return view
@@ -93,13 +94,6 @@ class ItemsForSaleFragment : Fragment() {
         super.onDestroyView()
     }
 
-    private fun showPostView() {
-        val transaction = fragmentManager!!.beginTransaction()
-        val fragment = PostItemFragment()
-        transaction.replace(R.id.fragment_layout, fragment)
-        transaction.addToBackStack(null)
-        transaction.commit()
-    }
 
     private fun getItemsFromDb() {
         val query = ref.orderByChild("seller").equalTo(FirebaseAuth.getInstance().currentUser!!.email.toString())

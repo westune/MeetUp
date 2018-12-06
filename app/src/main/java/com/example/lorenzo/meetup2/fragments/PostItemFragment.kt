@@ -20,6 +20,7 @@ import com.example.lorenzo.meetup2.model.Item
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.Toast
+import com.example.lorenzo.meetup2.MainActivity
 import com.example.lorenzo.meetup2.R
 import com.google.android.gms.tasks.Continuation
 import com.google.android.gms.tasks.Task
@@ -39,12 +40,11 @@ class PostItemFragment : Fragment() {
     private lateinit var zipText: EditText
     private lateinit var postButton: Button
     private lateinit var locationButton: AppCompatImageButton
-    private lateinit var locationManager: LocationManager
     private lateinit var imageButton: ImageButton
-    private var location: Location? = null
     private val REQUEST_PICK_IMAGE = 1
     private var imageUri: Uri? = null
     private lateinit var mStorageRef:StorageReference
+    private lateinit var mActivity:MainActivity
 
 
     override fun onAttach(context: Context?) {
@@ -54,8 +54,8 @@ class PostItemFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(LOG, "On Create")
-        locationManager = activity!!.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         mStorageRef = FirebaseStorage.getInstance().getReference("uploads")
+        mActivity = activity as MainActivity
         super.onCreate(savedInstanceState)
     }
 
@@ -164,13 +164,14 @@ class PostItemFragment : Fragment() {
         val user = FirebaseAuth.getInstance().currentUser!!.email.toString()
         var long = 0.0
         var lat = 0.0
+        val location = mActivity.sLocation
         when{
             location != null ->{
-                long = location!!.longitude
-                lat = location!!.latitude
+                long = location.longitude
+                lat = location.latitude
             }
             location == null -> {
-                val address = getAddress()
+                val address = mActivity.getAddress(zipText.toString())
                 if(address == null){
                     zipText.error = "Invalid Zip Code"
                     zipText.requestFocus()
@@ -187,12 +188,6 @@ class PostItemFragment : Fragment() {
         showPostItems()
     }
 
-    private fun getAddress(): Address? {
-        val geocoder = Geocoder(activity)
-        val address = geocoder.getFromLocationName(zipText.text.toString(), 1)
-        if(address == null || address.size == 0) {return null}
-        else return address[0]
-    }
 
     private fun showPostItems() {
         val transaction = fragmentManager!!.beginTransaction()
@@ -204,36 +199,7 @@ class PostItemFragment : Fragment() {
 
     @SuppressLint("MissingPermission")
     private fun setZip() {
-        val hasGps = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
-        if (hasGps) {
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0F, object : LocationListener {
-                override fun onLocationChanged(loc: Location?) {
-                    if (loc != null) {
-                        location = loc
-                    }
-                }
-
-                override fun onStatusChanged(p0: String?, p1: Int, p2: Bundle?){}
-                override fun onProviderEnabled(p0: String?) {}
-                override fun onProviderDisabled(p0: String?) {}
-
-            })
-
-            val localGpsLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-            if (localGpsLocation != null) {
-                location = localGpsLocation
-                val geocoder = Geocoder(activity)
-                val address = geocoder.getFromLocation(location!!.latitude, location!!.longitude, 1)
-                zipText.setText(address[0].postalCode.toString())
-            }else{
-                Toast.makeText(this.activity, "Unable To Use Location", Toast.LENGTH_LONG).show()
-            }
-        } else {
-            startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
-            return
-        }
-
-
+        zipText.setText(mActivity.getZip())
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -260,12 +226,8 @@ class PostItemFragment : Fragment() {
             val uploadTask = fileReference.putFile(imageUri!!).addOnSuccessListener {
                 //progress bar back to 0
             }.addOnFailureListener{
-                Toast.makeText(this.activity!!, it.message, Toast.LENGTH_LONG)
-            }.addOnProgressListener {
-                val progress = (100.0 * it.bytesTransferred) / it.totalByteCount
-                //progress bar. set progressbar( progress )
+                Toast.makeText(this.activity!!, it.message, Toast.LENGTH_LONG).show()
             }
-
 
             uploadTask.continueWithTask(Continuation<UploadTask.TaskSnapshot, Task<Uri>> { task ->
                 if (!task.isSuccessful) {
