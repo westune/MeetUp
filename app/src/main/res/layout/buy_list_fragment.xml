@@ -46,13 +46,13 @@
                 android:src="@drawable/ic_my_location_24px"
                 android:id="@+id/locationButton"
                 android:padding="10dp"/>
-
         </LinearLayout>
 
         <android.support.v7.widget.RecyclerView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:visibility="visible"/>
+            android:visibility="visible"
+            android:id="@+id/recyclerView"/>
     </LinearLayout>
 
 </android.support.constraint.ConstraintLayout>

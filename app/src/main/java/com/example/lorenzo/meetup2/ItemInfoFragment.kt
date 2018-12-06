@@ -24,7 +24,7 @@ class ItemInfoFragment:Fragment(){
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         Log.d(LOG, "On Create View")
-        return inflater!!.inflate(R.layout.item_info_fragment, container, false);
+        return inflater!!.inflate(R.layout.item_info_fragment, container, false)
     }
 
     override fun onStart() {

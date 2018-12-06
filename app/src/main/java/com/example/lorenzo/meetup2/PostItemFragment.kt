@@ -1,9 +1,11 @@
 package com.example.lorenzo.meetup2
 
 import android.annotation.SuppressLint
+import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.location.*
+import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.support.v4.app.Fragment
@@ -12,15 +14,19 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.webkit.MimeTypeMap
 import android.widget.Button
 import com.example.lorenzo.meetup2.model.Item
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.Toast
+import com.google.android.gms.tasks.Continuation
+import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.FirebaseDatabase
-import java.io.Console
-import java.util.*
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
+import com.google.firebase.storage.UploadTask
 
 class PostItemFragment : Fragment() {
 
@@ -33,9 +39,13 @@ class PostItemFragment : Fragment() {
     private lateinit var postButton: Button
     private lateinit var locationButton: AppCompatImageButton
     private lateinit var locationManager: LocationManager
+    private lateinit var imageButton: ImageButton
     private var hasGps = false
-    private var hasInternet = false
     private var location: Location? = null
+    private val REQUEST_PICK_IMAGE = 1
+    private var imageUri: Uri? = null
+    private lateinit var mStorageRef:StorageReference
+
 
     override fun onAttach(context: Context?) {
         Log.d(LOG, "On Attach")
@@ -44,6 +54,9 @@ class PostItemFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(LOG, "On Create")
+        locationManager = activity!!.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        hasGps = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+        mStorageRef = FirebaseStorage.getInstance().getReference("uploads")
         super.onCreate(savedInstanceState)
     }
 
@@ -56,17 +69,21 @@ class PostItemFragment : Fragment() {
         zipText = view.findViewById(R.id.zip)
         postButton = view.findViewById(R.id.postButton)
         locationButton = view.findViewById(R.id.locationButton)
+        imageButton = view.findViewById(R.id.imageButton)
+        setUpButtons()
+        return view
+    }
+
+
+
+    private fun setUpButtons(){
         postButton.setBackgroundColor(resources.getColor(R.color.red))
         postButton.setText(R.string.post_button)
         postButton.setTextColor(resources.getColor(R.color.white))
         postButton.setOnClickListener { Button ->
             when (Button.id) {
                 R.id.postButton -> {
-                    postItem(
-                            nameText.text.toString().trim(),
-                            descriptionText.text.toString().trim(),
-                            priceText.text.toString().trim(),
-                            zipText.text.toString().trim())
+                    uploadFile()
                 }
             }
         }
@@ -76,7 +93,20 @@ class PostItemFragment : Fragment() {
                 R.id.locationButton -> setZip()
             }
         }
-        return view
+
+        imageButton.setOnClickListener { ImageButton ->
+            when (ImageButton.id){
+                R.id.imageButton -> addImage()
+            }
+        }
+
+    }
+
+    private fun addImage(){
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
+        intent.addCategory(Intent.CATEGORY_OPENABLE)
+        intent.type = "image/*"
+        startActivityForResult(intent, REQUEST_PICK_IMAGE)
     }
 
     override fun onStart() {
@@ -126,7 +156,7 @@ class PostItemFragment : Fragment() {
 
     }
 
-    private fun postItem(name: String, description: String, price: String, zip: String) {
+    private fun postItem(name: String, description: String, price: String, zip: String, imageUrl:String) {
         if (checkForEmptyInputs(name, description, price, zip)) {
             return
         }
@@ -143,7 +173,8 @@ class PostItemFragment : Fragment() {
             location == null -> {
                 val address = getAddress()
                 if(address == null){
-                    Toast.makeText(activity, "Unable To Use Zip Code", Toast.LENGTH_LONG).show()
+                    zipText.error = "Invalid Zip Code"
+                    zipText.requestFocus()
                     return
                 }else{
                     long = address.longitude
@@ -151,7 +182,7 @@ class PostItemFragment : Fragment() {
                 }
             }
         }
-        val newItem = Item(id!!, description, name, zip, price, user, lat, long)
+        val newItem = Item(id!!, description, name, zip, price, user, lat, long, imageUrl)
         ref.child(id).setValue(newItem)
         Toast.makeText(activity, "New Item Posted!", Toast.LENGTH_LONG).show()
         showPostItems()
@@ -174,9 +205,6 @@ class PostItemFragment : Fragment() {
 
     @SuppressLint("MissingPermission")
     private fun setZip() {
-        locationManager = activity!!.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        hasGps = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
-        hasInternet = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
         if (hasGps) {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0F, object : LocationListener {
                 override fun onLocationChanged(loc: Location?) {
@@ -194,35 +222,80 @@ class PostItemFragment : Fragment() {
             val localGpsLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
             if (localGpsLocation != null) {
                 location = localGpsLocation
+                val geocoder = Geocoder(activity)
+                val address = geocoder.getFromLocation(location!!.latitude, location!!.longitude, 1)
+                zipText.setText(address[0].postalCode.toString())
+            }else{
+                Toast.makeText(this.activity, "Unable To Use Location", Toast.LENGTH_LONG).show()
             }
-        } else if (hasInternet) {
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0F, object : LocationListener {
-                override fun onLocationChanged(loc: Location?) {
-                    if (loc != null) {
-                        location = loc
-                    }
-                }
-
-                override fun onStatusChanged(p0: String?, p1: Int, p2: Bundle?) {}
-                override fun onProviderEnabled(p0: String?) {}
-                override fun onProviderDisabled(p0: String?) { }
-
-            })
-
-            val localNetworkLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
-            if (localNetworkLocation != null) {
-                location = localNetworkLocation
-            }
-
-
         } else {
             startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
             return
         }
 
-        val geocoder = Geocoder(activity)
-        val address = geocoder.getFromLocation(location!!.latitude, location!!.longitude, 1)
-        zipText.setText(address[0].postalCode.toString())
+
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if(data != null){
+            imageUri = data.data
+            imageButton.setImageURI(imageUri)
+            imageButton.background = null
+        }else{
+            Log.e(LOG, "Cannot get image for uploading")
+        }
+    }
+
+    private fun getFileExtension(uri:Uri): String{
+        val cR: ContentResolver = this.activity!!.contentResolver
+        val mime:MimeTypeMap = MimeTypeMap.getSingleton()
+        return mime.getExtensionFromMimeType(cR.getType(uri))!!
+    }
+
+    private fun uploadFile(){
+        if(imageUri != null){
+            val fileReference:StorageReference = mStorageRef.child("" +
+                    System.currentTimeMillis() + "."
+                + getFileExtension(imageUri!!))
+            val uploadTask = fileReference.putFile(imageUri!!).addOnSuccessListener {
+                //progress bar back to 0
+            }.addOnFailureListener{
+                Toast.makeText(this.activity!!, it.message, Toast.LENGTH_LONG)
+            }.addOnProgressListener {
+                val progress = (100.0 * it.bytesTransferred) / it.totalByteCount
+                //progress bar. set progressbar( progress )
+            }
+
+
+            uploadTask.continueWithTask(Continuation<UploadTask.TaskSnapshot, Task<Uri>> { task ->
+                if (!task.isSuccessful) {
+                    task.exception?.let {
+                        throw it
+                    }
+                }
+                return@Continuation fileReference.downloadUrl
+            }).addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val downloadUri = task.result.toString()
+                    postItem(
+                        nameText.text.toString().trim(),
+                        descriptionText.text.toString().trim(),
+                        priceText.text.toString().trim(),
+                        zipText.text.toString().trim(),
+                        downloadUri)
+                } else {
+                    // Handle failures
+                    // ...
+                }
+            }
+
+        } else {
+            postItem(
+                nameText.text.toString().trim(),
+                descriptionText.text.toString().trim(),
+                priceText.text.toString().trim(),
+                zipText.text.toString().trim(),
+                "")
+        }
+    }
 }
