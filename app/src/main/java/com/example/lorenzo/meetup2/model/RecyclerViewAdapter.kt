@@ -2,20 +2,20 @@ package com.example.lorenzo.meetup2.model
 
 
 import android.content.Context
+import android.os.Bundle
 import android.support.v7.widget.RecyclerView
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import com.example.lorenzo.meetup2.ItemInfoFragment
-import android.support.v4.app.Fragment
+import com.example.lorenzo.meetup2.fragments.ItemInfoFragment
+import android.support.v4.app.FragmentManager
 import com.example.lorenzo.meetup2.R
 import com.squareup.picasso.Picasso
 
-class RecyclerViewAdapter(val list: MutableList<Item>, val context: Context): RecyclerView.Adapter<RecyclerView.ViewHolder>(){
+class RecyclerViewAdapter(val list: MutableList<Item>, val context: Context, val fragmentManager:FragmentManager): RecyclerView.Adapter<RecyclerView.ViewHolder>(){
 
     private val LAYOUT = R.layout.item_card
     private lateinit var view:View
@@ -48,7 +48,7 @@ class RecyclerViewAdapter(val list: MutableList<Item>, val context: Context): Re
         }
 
         holder.layout.setOnClickListener{
-            Log.d("You Clicked", item.name)
+            showItemInfo(item.name, item.price, item.imageUrl!!, item.description)
         }
     }
 
@@ -60,18 +60,24 @@ class RecyclerViewAdapter(val list: MutableList<Item>, val context: Context): Re
         val name = itemView.findViewById<TextView>(R.id.name)!!
         val price = itemView.findViewById<TextView>(R.id.price)!!
         val image = itemView.findViewById<ImageView>(R.id.imageView)!!
-        val layout = itemView.findViewById<LinearLayout>(R.id.layout)
+        val layout = itemView.findViewById<LinearLayout>(R.id.layout)!!
     }
 
-    /*
-    private fun showItemInfo(name:String, price:Int, imageUrl:String){
-        val transaction = manager.beginTransaction()
+
+    private fun showItemInfo(name:String, price:String, imageUrl:String, description:String){
+        val transaction = fragmentManager.beginTransaction()
         val fragment = ItemInfoFragment()
+        val bundle = Bundle()
+        bundle.putString("name", name)
+        bundle.putString("price", price)
+        bundle.putString("imageUrl", imageUrl)
+        bundle.putString("description", description)
+        fragment.arguments = bundle
         transaction.replace(R.id.fragment_layout, fragment)
         transaction.addToBackStack(null)
         transaction.commit()
     }
-    */
+
 
 
 }

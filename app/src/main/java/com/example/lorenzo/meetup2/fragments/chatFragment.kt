@@ -1,4 +1,4 @@
-package com.example.lorenzo.meetup2
+package com.example.lorenzo.meetup2.fragments
 
 import android.content.Context
 import android.os.Bundle
@@ -11,23 +11,28 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
+import android.widget.ProgressBar
+import com.example.lorenzo.meetup2.R
 import com.example.lorenzo.meetup2.model.ChatMessage
+import com.example.lorenzo.meetup2.model.MessageUtil
 import com.firebase.ui.database.FirebaseRecyclerAdapter
-import kotlinx.android.synthetic.*
+import com.google.firebase.auth.FirebaseAuth
 
 class chatFragment:Fragment(), MessageUtil.MessageLoadListener{
 
     private val LOG:String = "Chat Fragment"
-    private var mFirebaseAdapter:FirebaseRecyclerAdapter<ChatMessage, MessageUtil.MessageViewHolder>? = null
+    private lateinit var mFirebaseAdapter:FirebaseRecyclerAdapter<ChatMessage, MessageUtil.MessageViewHolder>
     private val MESSAGES_CHILD:String = "messages"
     private val MSG_LENGTH_LIMIT:Int = 150
     private val ANONYMOUS:String = "anonymous"
+    private lateinit var productId:String
 
     //UI Elements
-    private var mSendButton:FloatingActionButton? = null
-    private val mMessageRecyclerView:RecyclerView = RecyclerView(this.context!!)
-    private var mLinearLayoutManager:LinearLayoutManager? =  null
-    private var mMessageEditText:EditText? = null
+    private lateinit var mSendButton:FloatingActionButton
+    private lateinit var mMessageRecyclerView:RecyclerView
+    private lateinit var mLinearLayoutManager:LinearLayoutManager
+    private lateinit var mMessageEditText:EditText
+    private lateinit var mProgressbar:ProgressBar
 
     override fun onAttach(context: Context?) {
         Log.d(LOG, "On Attach")
@@ -36,16 +41,34 @@ class chatFragment:Fragment(), MessageUtil.MessageLoadListener{
 
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(LOG, "On Create")
+        mLinearLayoutManager = LinearLayoutManager(this.activity)
+        mLinearLayoutManager.stackFromEnd = true
         super.onCreate(savedInstanceState)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         Log.d(LOG, "On Create View")
-        mSendButton = container!!.findViewById(R.id.sendButton)
-        mFirebaseAdapter = MessageUtil.Companion.getFirebaseAdapter(this.activity!!, this, mLinearLayoutManager!!, mMessageRecyclerView)
+        val view = inflater.inflate(R.layout.chat_fragment, container, false)
+        mSendButton = view.findViewById(R.id.sendButton)
+        mSendButton.setOnClickListener {
+            when(it.id){
+                R.id.sendButton -> sendMessage()
+            }
+        }
+        mMessageRecyclerView = view.findViewById(R.id.messageRecyclerView)
+        mProgressbar = view.findViewById(R.id.progressBar)
+        mMessageEditText = view.findViewById(R.id.messageEditText)
+        mFirebaseAdapter = MessageUtil.getFirebaseAdapter(this.activity!!, this, mLinearLayoutManager!!, mMessageRecyclerView)
+        mMessageRecyclerView.layoutManager = mLinearLayoutManager
         mMessageRecyclerView.adapter = mFirebaseAdapter
+        return view
+    }
 
-        return inflater!!.inflate(R.layout.chat_fragment, container, false)
+    fun sendMessage(){
+        mMessageRecyclerView.scrollToPosition(0)
+        val chatMessage = ChatMessage(mMessageEditText.text.toString(),
+                FirebaseAuth.getInstance().currentUser!!.email.toString())
+        MessageUtil.send(chatMessage, productId)
     }
 
     override fun onStart() {
@@ -84,6 +107,6 @@ class chatFragment:Fragment(), MessageUtil.MessageLoadListener{
     }
 
     override fun onLoadComplete() {
-
+        mProgressbar.visibility = View.INVISIBLE
     }
 }

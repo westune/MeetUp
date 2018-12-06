@@ -1,4 +1,4 @@
-package com.example.lorenzo.meetup2
+package com.example.lorenzo.meetup2.fragments
 
 import android.annotation.SuppressLint
 import android.content.ContentResolver
@@ -20,6 +20,7 @@ import com.example.lorenzo.meetup2.model.Item
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.Toast
+import com.example.lorenzo.meetup2.R
 import com.google.android.gms.tasks.Continuation
 import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
@@ -40,7 +41,6 @@ class PostItemFragment : Fragment() {
     private lateinit var locationButton: AppCompatImageButton
     private lateinit var locationManager: LocationManager
     private lateinit var imageButton: ImageButton
-    private var hasGps = false
     private var location: Location? = null
     private val REQUEST_PICK_IMAGE = 1
     private var imageUri: Uri? = null
@@ -55,7 +55,6 @@ class PostItemFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(LOG, "On Create")
         locationManager = activity!!.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        hasGps = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
         mStorageRef = FirebaseStorage.getInstance().getReference("uploads")
         super.onCreate(savedInstanceState)
     }
@@ -182,7 +181,7 @@ class PostItemFragment : Fragment() {
                 }
             }
         }
-        val newItem = Item(id!!, description, name, zip, price, user, lat, long, imageUrl)
+        val newItem = Item(id!!, description, name, zip, price, user, long, lat, imageUrl)
         ref.child(id).setValue(newItem)
         Toast.makeText(activity, "New Item Posted!", Toast.LENGTH_LONG).show()
         showPostItems()
@@ -205,6 +204,7 @@ class PostItemFragment : Fragment() {
 
     @SuppressLint("MissingPermission")
     private fun setZip() {
+        val hasGps = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
         if (hasGps) {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0F, object : LocationListener {
                 override fun onLocationChanged(loc: Location?) {

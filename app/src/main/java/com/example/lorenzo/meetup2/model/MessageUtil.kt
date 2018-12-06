@@ -1,51 +1,80 @@
 package com.example.lorenzo.meetup2.model
 
 import android.app.Activity
+import android.graphics.Bitmap
+import android.support.v4.content.ContextCompat
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
-import com.example.lorenzo.meetup2.R
-import com.google.firebase.auth.FirebaseAuth
+import com.bumptech.glide.Glide
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
-import kotlinx.android.synthetic.main.chat_message.view.*
+import com.firebase.ui.database.FirebaseRecyclerAdapter
+import com.bumptech.glide.request.target.SimpleTarget
+import com.bumptech.glide.request.transition.Transition
+import com.example.lorenzo.meetup2.R
 
 class MessageUtil{
-    private val TAG = MessageUtil::class.java.simpleName
-    val MESSAGES_CHILD = "messages"
+
+    private val LOG_TAG:String = MessageUtil::class.java.simpleName
+    public val MESSAGES_CHILD = "messages"
     private val sFirebaseDatabaseReference:DatabaseReference =
             FirebaseDatabase.getInstance().reference
-    lateinit var sAdapterListener: com.example.lorenzo.meetup2.MessageUtil.MessageLoadListener
-    private lateinit var sFirebaseAuth: FirebaseAuth
+    private val sAdapaterListener: MessageLoadListener? = null
 
-    interface MessageLoadListener {
-        fun onLoadComplete()
-    }
+    public interface MessageLoadListener{ fun onLoadComplete() }
 
-    fun send(chatMessage: ChatMessage){
-        sFirebaseDatabaseReference.child(MESSAGES_CHILD).push().setValue(chatMessage)
-    }
 
-    class MessageViewHolder(view: View): RecyclerView.ViewHolder(view){
 
-        lateinit var messageTextView:TextView
-        lateinit var messengerTextView: TextView
-        lateinit var messengerImageView: ImageView
+    class MessageViewHolder(v: View): RecyclerView.ViewHolder(v){
+        val messageTextView: TextView = itemView.findViewById(R.id.messageTextView)
 
-        init {
-            messageTextView = view.findViewById(R.id.messageTextView)
-            messengerTextView = view.findViewById(R.id.messengerTextView)
-            messengerImageView = view.findViewById(R.id.messengerImageView)
-        }
     }
 
     companion object {
+        var MU = MessageUtil()
         fun getFirebaseAdapter(activity: Activity,
                                listener: MessageLoadListener,
                                linearManager: LinearLayoutManager,
-                               recyclerView: RecyclerView){
+                               recyclerView: RecyclerView)
+                :FirebaseRecyclerAdapter<ChatMessage, MessageViewHolder>{
+            return MU.getFirebaseAdapter(activity, listener, linearManager, recyclerView)
+        }
+
+        fun send(chatMessage: ChatMessage, itemId:String){
+            MU.sFirebaseDatabaseReference.child(MU.MESSAGES_CHILD).child(itemId).push().setValue(chatMessage)
         }
     }
+
+    fun getFirebaseAdapter(activity: Activity,
+                            listener: MessageLoadListener,
+                            linearManager: LinearLayoutManager,
+                            recyclerView: RecyclerView): FirebaseRecyclerAdapter<ChatMessage, MessageViewHolder> {
+        val adapter = object: FirebaseRecyclerAdapter<ChatMessage, MessageViewHolder>(ChatMessage::class.java,
+                R.layout.chat_message,
+        MessageViewHolder::class.java,
+        sFirebaseDatabaseReference.child(MESSAGES_CHILD)){
+            override fun populateViewHolder(viewHolder: MessageViewHolder?, model: ChatMessage?, position: Int) {
+                sAdapaterListener!!.onLoadComplete()
+                viewHolder!!.messageTextView!!.text = model!!.text
+            }
+        }
+
+        adapter.registerAdapterDataObserver(object: RecyclerView.AdapterDataObserver(){
+            override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
+                super.onItemRangeInserted(positionStart, itemCount)
+                val messageCount = adapter.itemCount
+                val lastVisiblePosition = linearManager.findLastCompletelyVisibleItemPosition()
+                if(lastVisiblePosition == -1 || (positionStart >= (messageCount - 1) && lastVisiblePosition == (positionStart - 1))){
+                    recyclerView.scrollToPosition(positionStart)
+                }
+            }
+        })
+        return adapter
+    }
+
+
 }
+

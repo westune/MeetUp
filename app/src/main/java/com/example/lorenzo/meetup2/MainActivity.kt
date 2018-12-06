@@ -11,6 +11,9 @@ import android.support.v7.app.AppCompatActivity
 import android.view.MenuItem
 import android.view.View
 import android.widget.AdapterView
+import com.example.lorenzo.meetup2.fragments.BuyListFragment
+import com.example.lorenzo.meetup2.fragments.ItemsForSaleFragment
+import com.example.lorenzo.meetup2.fragments.chatFragment
 import com.google.android.gms.common.api.GoogleApiClient
 import kotlinx.android.synthetic.main.activity_main.*
 import com.google.android.gms.common.ConnectionResult
@@ -24,8 +27,6 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
     private var mAuth:FirebaseAuth? = null
     private var mUser:FirebaseUser? = null
     private var mUserName:String = ""
-    private var mPhotoUrl:String = ""
-    private var mGoogleApiClient:GoogleApiClient? = null
     private var permission = arrayOf(android.Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION)
 
     private val mOnNavigationItemSelectedListener = BottomNavigationView.OnNavigationItemSelectedListener { item ->
@@ -39,6 +40,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
                 return@OnNavigationItemSelectedListener true
             }
             R.id.navigation_messages -> {
+                showConversations()
                 return@OnNavigationItemSelectedListener true
             }
         }
@@ -68,11 +70,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
             return
         } else {
             mUserName = mUser!!.displayName!!
-            if(mUser!!.photoUrl != null){
-                mPhotoUrl = mUser!!.photoUrl.toString()
-            }
         }
-
         showBuyList()
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener)
     }
@@ -110,6 +108,14 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
     private fun showItemsForSale(){
         val transaction = manager.beginTransaction()
         val fragment = ItemsForSaleFragment()
+        transaction.replace(R.id.fragment_layout, fragment)
+        transaction.addToBackStack(null)
+        transaction.commit()
+    }
+
+    private fun showConversations(){
+        val transaction = manager.beginTransaction()
+        val fragment = chatFragment()
         transaction.replace(R.id.fragment_layout, fragment)
         transaction.addToBackStack(null)
         transaction.commit()
