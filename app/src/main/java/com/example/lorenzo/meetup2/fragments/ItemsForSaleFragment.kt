@@ -1,7 +1,6 @@
-package com.example.lorenzo.meetup2
+package com.example.lorenzo.meetup2.fragments
 
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v7.widget.LinearLayoutManager
@@ -11,11 +10,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import com.example.lorenzo.meetup2.R
 import com.example.lorenzo.meetup2.model.Item
 import com.example.lorenzo.meetup2.model.RecyclerViewAdapter
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
-import java.util.concurrent.locks.ReentrantLock
 
 class ItemsForSaleFragment : Fragment() {
 
@@ -54,7 +53,7 @@ class ItemsForSaleFragment : Fragment() {
         getItemsFromDb()
 
 
-        adapter = RecyclerViewAdapter(list, activity!!.applicationContext)
+        adapter = RecyclerViewAdapter(list, activity!!.applicationContext, fragmentManager!!)
         recyclerView.adapter = adapter
         return view
     }
@@ -116,7 +115,7 @@ class ItemsForSaleFragment : Fragment() {
                             list.add(i.getValue(Item::class.java)!!)
                         }
                     }
-                    adapter = RecyclerViewAdapter(list, activity!!.applicationContext)
+                    adapter = RecyclerViewAdapter(list, activity!!.applicationContext, fragmentManager!!)
                     recyclerView.adapter = adapter
                 }
             })
