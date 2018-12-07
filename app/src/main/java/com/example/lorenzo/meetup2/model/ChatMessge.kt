@@ -1,8 +1,8 @@
 package com.example.lorenzo.meetup2.model
 
-class ChatMessage(val text: String, val sender: String){
+class ChatMessage(val body: String, val sender: String, val senderEmail:String){
 
-
+    constructor():this("", "","")
 
 
 }

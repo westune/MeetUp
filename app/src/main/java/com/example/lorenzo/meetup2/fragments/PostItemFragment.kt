@@ -29,12 +29,19 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.UploadTask
+import com.squareup.picasso.Picasso
+import kotlinx.android.synthetic.main.item_info_fragment.*
 
 class PostItemFragment : Fragment() {
 
     private val LOG = "Post Item Fragment"
     private val LAYOUT = R.layout.post_item_fragment
     private lateinit var priceText: EditText
+    private var name:String = ""
+    private var description:String = ""
+    private var price:String = ""
+    private var zip:String = ""
+    private var imageUrl:String = ""
     private lateinit var descriptionText: EditText
     private lateinit var nameText: EditText
     private lateinit var zipText: EditText
@@ -45,6 +52,8 @@ class PostItemFragment : Fragment() {
     private var imageUri: Uri? = null
     private lateinit var mStorageRef:StorageReference
     private lateinit var mActivity:MainActivity
+    private var id:String? = null
+    private var imageLoaded:Boolean = false
 
 
     override fun onAttach(context: Context?) {
@@ -52,10 +61,21 @@ class PostItemFragment : Fragment() {
         super.onAttach(context)
     }
 
+
+    override fun setArguments(args: Bundle?) {
+        id = args!!.get("id")!!.toString()
+        name = args.get("name")!!.toString()
+        price = args.get("price")!!.toString()
+        description = args.get("description")!!.toString()
+        zip = args.get("zip")!!.toString()
+        imageUrl = args.get("imageUrl")!!.toString()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(LOG, "On Create")
         mStorageRef = FirebaseStorage.getInstance().getReference("uploads")
         mActivity = activity as MainActivity
+        imageLoaded = false
         super.onCreate(savedInstanceState)
     }
 
@@ -82,6 +102,7 @@ class PostItemFragment : Fragment() {
         postButton.setOnClickListener { Button ->
             when (Button.id) {
                 R.id.postButton -> {
+                    postButton.isEnabled = false
                     uploadFile()
                 }
             }
@@ -115,6 +136,26 @@ class PostItemFragment : Fragment() {
 
     override fun onResume() {
         Log.d(LOG, "On Resume")
+        if(name != ""){
+            nameText.setText(name)
+        }
+        if(price != ""){
+            priceText.setText(price)
+        }
+        if(description != ""){
+            descriptionText.setText(description)
+        }
+        if(zip != ""){
+            zipText.setText(zip)
+        }
+        if(imageUrl != "" && !imageLoaded) {
+            Picasso.with(activity)
+                    .load(imageUrl)
+                    .fit()
+                    .centerCrop()
+                    .into(imageButton)
+            imageLoaded = true
+        }
         super.onResume()
     }
 
@@ -160,8 +201,10 @@ class PostItemFragment : Fragment() {
             return
         }
         val ref = FirebaseDatabase.getInstance().getReference("Items")
-        val id = ref.push().key
-        val user = FirebaseAuth.getInstance().currentUser!!.email.toString()
+        if(id == null) {
+            id = ref.push().key
+        }
+        val user = mActivity.sUserEmail
         var long = 0.0
         var lat = 0.0
         val location = mActivity.sLocation
@@ -171,10 +214,11 @@ class PostItemFragment : Fragment() {
                 lat = location.latitude
             }
             location == null -> {
-                val address = mActivity.getAddress(zipText.toString())
+                val address = mActivity.getAddress(zipText.text.toString())
                 if(address == null){
                     zipText.error = "Invalid Zip Code"
                     zipText.requestFocus()
+                    postButton.isEnabled = true
                     return
                 }else{
                     long = address.longitude
@@ -182,20 +226,16 @@ class PostItemFragment : Fragment() {
                 }
             }
         }
-        val newItem = Item(id!!, description, name, zip, price, user, long, lat, imageUrl)
-        ref.child(id).setValue(newItem)
+        val newItem = Item(id!!, description, name, zip, price, user, long, lat, imageUrl, false)
+        ref.child(id!!).setValue(newItem)
+        id = null
         Toast.makeText(activity, "New Item Posted!", Toast.LENGTH_LONG).show()
-        showPostItems()
+        postButton.isEnabled = true
+        mActivity.showItemsForSaleFragment()
     }
 
 
-    private fun showPostItems() {
-        val transaction = fragmentManager!!.beginTransaction()
-        val fragment = ItemsForSaleFragment()
-        transaction.replace(R.id.fragment_layout, fragment)
-        transaction.addToBackStack(null)
-        transaction.commit()
-    }
+
 
     @SuppressLint("MissingPermission")
     private fun setZip() {
@@ -204,9 +244,14 @@ class PostItemFragment : Fragment() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if(data != null){
+            Picasso.with(context).invalidate(imageUrl)
             imageUri = data.data
-            imageButton.setImageURI(imageUri)
             imageButton.background = null
+            Picasso.with(activity)
+                    .load(imageUri)
+                    .fit()
+                    .centerCrop()
+                    .into(imageButton)
         }else{
             Log.e(LOG, "Cannot get image for uploading")
         }
@@ -219,7 +264,7 @@ class PostItemFragment : Fragment() {
     }
 
     private fun uploadFile(){
-        if(imageUri != null){
+        if(imageUri != null && imageUrl == ""){
             val fileReference:StorageReference = mStorageRef.child("" +
                     System.currentTimeMillis() + "."
                 + getFileExtension(imageUri!!))
@@ -251,13 +296,21 @@ class PostItemFragment : Fragment() {
                 }
             }
 
-        } else {
+        } else if(imageUrl != ""){
             postItem(
                 nameText.text.toString().trim(),
                 descriptionText.text.toString().trim(),
                 priceText.text.toString().trim(),
                 zipText.text.toString().trim(),
-                "")
+                imageUrl)
+        } else{
+            postItem(
+                    nameText.text.toString().trim(),
+                    descriptionText.text.toString().trim(),
+                    priceText.text.toString().trim(),
+                    zipText.text.toString().trim(),
+                    "")
+
         }
     }
 }

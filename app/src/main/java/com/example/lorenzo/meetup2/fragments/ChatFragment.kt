@@ -12,20 +12,25 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.ProgressBar
+import com.example.lorenzo.meetup2.MainActivity
 import com.example.lorenzo.meetup2.R
 import com.example.lorenzo.meetup2.model.ChatMessage
-import com.example.lorenzo.meetup2.model.MessageUtil
-import com.firebase.ui.database.FirebaseRecyclerAdapter
-import com.google.firebase.auth.FirebaseAuth
+import com.example.lorenzo.meetup2.model.ChatRecyclerViewAdapter
+import com.google.firebase.database.*
 
-class chatFragment:Fragment(), MessageUtil.MessageLoadListener{
+class ChatFragment:Fragment(){
 
     private val LOG:String = "Chat Fragment"
-    private lateinit var mFirebaseAdapter:FirebaseRecyclerAdapter<ChatMessage, MessageUtil.MessageViewHolder>
     private val MESSAGES_CHILD:String = "messages"
-    private val MSG_LENGTH_LIMIT:Int = 150
     private val ANONYMOUS:String = "anonymous"
-    private lateinit var productId:String
+    private var mProductId:String = ""
+    private lateinit var mActivity:MainActivity
+    private lateinit var mRef: DatabaseReference
+    private lateinit var mUserRef: DatabaseReference
+    private var mBuyer:String = ""
+    private val mMessages:MutableList<ChatMessage> = mutableListOf()
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var adapter: ChatRecyclerViewAdapter
 
     //UI Elements
     private lateinit var mSendButton:FloatingActionButton
@@ -39,8 +44,17 @@ class chatFragment:Fragment(), MessageUtil.MessageLoadListener{
         super.onAttach(context)
     }
 
+    override fun setArguments(args: Bundle?) {
+        mProductId = args!!.get("productId")!!.toString()
+        mBuyer = args.get("buyer")!!.toString()
+
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(LOG, "On Create")
+        mActivity = activity as MainActivity
+        mRef = FirebaseDatabase.getInstance().getReference("$MESSAGES_CHILD/$mProductId/$mBuyer")
+        mUserRef = FirebaseDatabase.getInstance().getReference("users/$mBuyer")
         mLinearLayoutManager = LinearLayoutManager(this.activity)
         mLinearLayoutManager.stackFromEnd = true
         super.onCreate(savedInstanceState)
@@ -49,6 +63,11 @@ class chatFragment:Fragment(), MessageUtil.MessageLoadListener{
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         Log.d(LOG, "On Create View")
         val view = inflater.inflate(R.layout.chat_fragment, container, false)
+        recyclerView = view.findViewById(R.id.messageRecyclerView)
+        recyclerView.setHasFixedSize(true)
+        recyclerView.layoutManager = LinearLayoutManager(this.context)
+        adapter = ChatRecyclerViewAdapter(mMessages, activity as MainActivity)
+        recyclerView.adapter = adapter
         mSendButton = view.findViewById(R.id.sendButton)
         mSendButton.setOnClickListener {
             when(it.id){
@@ -58,17 +77,20 @@ class chatFragment:Fragment(), MessageUtil.MessageLoadListener{
         mMessageRecyclerView = view.findViewById(R.id.messageRecyclerView)
         mProgressbar = view.findViewById(R.id.progressBar)
         mMessageEditText = view.findViewById(R.id.messageEditText)
-        mFirebaseAdapter = MessageUtil.getFirebaseAdapter(this.activity!!, this, mLinearLayoutManager!!, mMessageRecyclerView)
-        mMessageRecyclerView.layoutManager = mLinearLayoutManager
-        mMessageRecyclerView.adapter = mFirebaseAdapter
+        loadMessages()
         return view
     }
+
 
     fun sendMessage(){
         mMessageRecyclerView.scrollToPosition(0)
         val chatMessage = ChatMessage(mMessageEditText.text.toString(),
-                FirebaseAuth.getInstance().currentUser!!.email.toString())
-        MessageUtil.send(chatMessage, productId)
+                mActivity.sUserName,
+                mActivity.sUserEmail)
+        if(mMessages.size == 0){
+            mUserRef.setValue(mProductId)
+        }
+        mRef.push().setValue(chatMessage)
     }
 
     override fun onStart() {
@@ -78,6 +100,7 @@ class chatFragment:Fragment(), MessageUtil.MessageLoadListener{
 
     override fun onResume() {
         Log.d(LOG, "On Resume")
+        mMessages
         super.onResume()
     }
 
@@ -106,7 +129,25 @@ class chatFragment:Fragment(), MessageUtil.MessageLoadListener{
         super.onDestroyView()
     }
 
-    override fun onLoadComplete() {
-        mProgressbar.visibility = View.INVISIBLE
+    private fun loadMessages() {
+        val thread = Thread {
+            mRef.addValueEventListener(object : ValueEventListener {
+                override fun onCancelled(p0: DatabaseError) {}
+
+
+
+                override fun onDataChange(data: DataSnapshot) {
+                    if (data.exists()) {
+                        for(i in data.children){
+                            mMessages.add(i.getValue(ChatMessage::class.java)!!)
+                        }
+                    }
+                    adapter = ChatRecyclerViewAdapter(mMessages, activity as MainActivity)
+                    recyclerView.adapter = adapter
+                }
+            })
+        }
+        thread.run()
     }
+
 }
