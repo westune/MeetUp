@@ -43,6 +43,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
     private var mUser:FirebaseUser? = null
     var sUserName:String = ""
     var sLocation: Location? = null
+    var sUserEmail:String = ""
     private lateinit var mLocationManager: LocationManager
     private var permission = arrayOf(android.Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION)
 
@@ -86,6 +87,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
             return
         } else {
             sUserName = mUser!!.displayName!!
+            sUserEmail = FirebaseAuth.getInstance().currentUser!!.email.toString()
         }
         showBuyListFragment()
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener)
@@ -152,7 +154,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
         transaction.replace(R.id.fragment_layout, fragment!!)
         transaction.commit()
     }
-0
+
     fun showConversationsFragment(){
         val transaction = manager.beginTransaction()
         val fragment:Fragment?

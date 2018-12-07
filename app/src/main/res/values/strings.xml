@@ -17,4 +17,8 @@
     <string name="description_default">Description</string>
     <string name="name_default">Title</string>
     <string name="price_default">Price</string>
+    <string name="edit_item">Edit</string>
+    <string name="delete_item">Delete</string>
+    <string name="mark_item_as_sold">Sold!</string>
+
 </resources>

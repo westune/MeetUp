@@ -54,7 +54,7 @@ class ItemsForSaleFragment : Fragment() {
             }
         }
         getItemsFromDb()
-        adapter = RecyclerViewAdapter(list, activity!!.applicationContext, fragmentManager!!)
+        adapter = RecyclerViewAdapter(list, activity as MainActivity)
         recyclerView.adapter = adapter
         return view
     }
@@ -109,7 +109,7 @@ class ItemsForSaleFragment : Fragment() {
                             list.add(i.getValue(Item::class.java)!!)
                         }
                     }
-                    adapter = RecyclerViewAdapter(list, activity!!.applicationContext, fragmentManager!!)
+                    adapter = RecyclerViewAdapter(list, activity as MainActivity)
                     recyclerView.adapter = adapter
                 }
             })

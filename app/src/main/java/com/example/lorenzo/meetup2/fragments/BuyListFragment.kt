@@ -22,7 +22,13 @@ import com.example.lorenzo.meetup2.model.Item
 import com.example.lorenzo.meetup2.model.RecyclerViewAdapter
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
+/*
+TUTORIALS FOLLOWED:
+https://www.youtube.com/playlist?list=PLk7v1Z2rk4hj6SDHf_YybDeVhUT9MXaj1
 
+
+I HAVE EDITED THE CODE GIVEN, BUT DON'T TAKE FULL CREDIT FOR IT
+*/
 class BuyListFragment : Fragment(), AdapterView.OnItemSelectedListener {
 
     private val LOG = "Buy List Fragment: "
@@ -174,10 +180,11 @@ class BuyListFragment : Fragment(), AdapterView.OnItemSelectedListener {
                 override fun onDataChange(data: DataSnapshot) {
                     if (data.exists()) {
                         for (i in data.children) {
+                            if((i.getValue(Item::class.java) as Item).seller != mActivity.sUserEmail)
                             list.add(i.getValue(Item::class.java)!!)
                         }
                     }
-                    adapter = RecyclerViewAdapter(list, activity!!.applicationContext, fragmentManager!!)
+                    adapter = RecyclerViewAdapter(list, activity as MainActivity)
                     recyclerView.adapter = adapter
                 }
             })
@@ -202,12 +209,12 @@ class BuyListFragment : Fragment(), AdapterView.OnItemSelectedListener {
                         for (i in data.children) {
                             val item = (i.getValue(Item::class.java) as Item)
                             Log.d(item.name, item.lon.toString() + " " + lon)
-                            if( item.lon >= (lon - lonMile * distance) && item.lon <= (lon + lonMile * distance)) {
+                            if( item.lon >= (lon - lonMile * distance) && item.lon <= (lon + lonMile * distance) && item.seller != mActivity.sUserEmail) {
                                 list.add(i.getValue(Item::class.java)!!)
                             }
                         }
                     }
-                    adapter = RecyclerViewAdapter(list, activity!!.applicationContext, fragmentManager!!)
+                    adapter = RecyclerViewAdapter(list, activity as MainActivity)
                     recyclerView.adapter = adapter
                 }
             })
