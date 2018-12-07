@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.*
-import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import com.google.firebase.auth.FirebaseAuth
@@ -14,7 +13,6 @@ import com.google.firebase.auth.FirebaseUser
 import android.support.design.widget.BottomNavigationView
 import android.support.v4.app.Fragment
 import android.support.v7.app.AppCompatActivity
-import android.util.Log
 import android.view.MenuItem
 import android.view.View
 import android.widget.AdapterView
@@ -23,7 +21,6 @@ import com.example.lorenzo.meetup2.fragments.*
 import com.google.android.gms.common.api.GoogleApiClient
 import kotlinx.android.synthetic.main.activity_main.*
 import com.google.android.gms.common.ConnectionResult
-import com.google.firebase.storage.StorageReference
 
 /*
 TUTORIALS FOLLOWED:
@@ -113,7 +110,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
         return super.onOptionsItemSelected(item)
     }
 
-    fun showBuyListFragment(){
+    private fun showBuyListFragment(){
         val transaction = manager.beginTransaction()
         val fragment:Fragment?
         if(manager.findFragmentByTag("buy") == null){
@@ -125,6 +122,23 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
         }
         transaction.replace(R.id.fragment_layout, fragment!!)
         transaction.commit()
+    }
+
+    fun showChatFragment(bundle: Bundle?){
+        val transaction = manager.beginTransaction()
+        val fragment:Fragment?
+        if(manager.findFragmentByTag("chat") == null){
+            fragment = ChatFragment()
+            transaction.add(fragment, "chat")
+            transaction.addToBackStack(null)
+        }else{
+            fragment = manager.findFragmentByTag("chat")
+        }
+        transaction.replace(R.id.fragment_layout, fragment!!)
+        transaction.commit()
+        if(bundle != null){
+            fragment.arguments = bundle
+        }
     }
 
     fun showItemsForSaleFragment(){
@@ -141,7 +155,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
         transaction.commit()
     }
 
-    fun showPostItemFragment(){
+    fun showPostItemFragment(bundle:Bundle?){
         val transaction = manager.beginTransaction()
         val fragment:Fragment?
         if(manager.findFragmentByTag("postitem") == null){
@@ -151,15 +165,19 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
         }else{
             fragment = manager.findFragmentByTag("postitem")
         }
+
         transaction.replace(R.id.fragment_layout, fragment!!)
         transaction.commit()
+        if(bundle != null){
+            fragment.arguments = bundle
+        }
     }
 
-    fun showConversationsFragment(){
+    private fun showConversationsFragment(){
         val transaction = manager.beginTransaction()
         val fragment:Fragment?
         if(manager.findFragmentByTag("conversations") == null){
-            fragment = chatFragment()
+            fragment = ChatFragment()
             transaction.add(fragment, "conversations")
             transaction.addToBackStack(null)
         }else{
@@ -212,6 +230,4 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
         if(address == null || address.size == 0) {return null}
         else return address[0]
     }
-
-
 }

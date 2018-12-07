@@ -2,10 +2,8 @@ package com.example.lorenzo.meetup2.fragments
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.Intent
 import android.location.*
 import android.os.Bundle
-import android.provider.Settings
 import android.support.v4.app.Fragment
 import android.support.v7.widget.AppCompatImageButton
 import android.support.v7.widget.LinearLayoutManager
@@ -19,8 +17,7 @@ import android.widget.*
 import com.example.lorenzo.meetup2.MainActivity
 import com.example.lorenzo.meetup2.R
 import com.example.lorenzo.meetup2.model.Item
-import com.example.lorenzo.meetup2.model.RecyclerViewAdapter
-import com.google.firebase.auth.FirebaseAuth
+import com.example.lorenzo.meetup2.model.ItemRecyclerViewAdapter
 import com.google.firebase.database.*
 /*
 TUTORIALS FOLLOWED:
@@ -40,7 +37,7 @@ class BuyListFragment : Fragment(), AdapterView.OnItemSelectedListener {
     private lateinit var mActivity:MainActivity
     private var distance: Int = 10
     private lateinit var recyclerView: RecyclerView
-    private lateinit var adapter: RecyclerViewAdapter
+    private lateinit var adapter: ItemRecyclerViewAdapter
     private var list: MutableList<Item> = mutableListOf()
     private lateinit var ref: DatabaseReference
     private val latMile = .016666666667
@@ -184,7 +181,7 @@ class BuyListFragment : Fragment(), AdapterView.OnItemSelectedListener {
                             list.add(i.getValue(Item::class.java)!!)
                         }
                     }
-                    adapter = RecyclerViewAdapter(list, activity as MainActivity)
+                    adapter = ItemRecyclerViewAdapter(list, activity as MainActivity)
                     recyclerView.adapter = adapter
                 }
             })
@@ -214,7 +211,7 @@ class BuyListFragment : Fragment(), AdapterView.OnItemSelectedListener {
                             }
                         }
                     }
-                    adapter = RecyclerViewAdapter(list, activity as MainActivity)
+                    adapter = ItemRecyclerViewAdapter(list, activity as MainActivity)
                     recyclerView.adapter = adapter
                 }
             })

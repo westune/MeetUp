@@ -5,6 +5,7 @@ import android.app.AlertDialog
 import android.content.Context
 import android.content.res.Resources
 import android.os.Bundle
+import android.support.design.R.id.action_image
 import android.support.design.R.id.center
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
@@ -22,6 +23,8 @@ import android.widget.Button
 import com.example.lorenzo.meetup2.MainActivity
 import com.example.lorenzo.meetup2.R
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
 import com.squareup.picasso.Picasso
 
 /*
@@ -29,15 +32,18 @@ resources Used:
 https://stackoverflow.com/questions/5959870/programmatically-set-height-on-layoutparams-as-density-independent-pixels
  */
 
-class RecyclerViewAdapter(val list: MutableList<Item>, val activity: MainActivity): RecyclerView.Adapter<RecyclerView.ViewHolder>(){
+class ItemRecyclerViewAdapter(val list: MutableList<Item>, val activity: MainActivity): RecyclerView.Adapter<RecyclerView.ViewHolder>(){
 
     private val LAYOUT = R.layout.item_card
     private lateinit var view:View
     private lateinit var mInflater:LayoutInflater
+    private lateinit var ref:DatabaseReference
+    private lateinit var itemId:String
 
     override fun onCreateViewHolder(p0: ViewGroup, p1: Int): RecyclerView.ViewHolder {
         mInflater = LayoutInflater.from(p0.context)
         view = mInflater.inflate(LAYOUT, p0, false)
+        ref = FirebaseDatabase.getInstance().getReference("Messages")
         return ViewHolder(view)
     }
 
@@ -64,7 +70,7 @@ class RecyclerViewAdapter(val list: MutableList<Item>, val activity: MainActivit
         }
 
         holder.layout.setOnClickListener{
-            showItem(item.name, item.price, item.imageUrl!!, item.description, item.seller)
+            showItem(item.name, item.price, item.imageUrl!!, item.description, item.seller, item.id, item.zip)
         }
     }
 
@@ -80,10 +86,11 @@ class RecyclerViewAdapter(val list: MutableList<Item>, val activity: MainActivit
     }
 
 
-    private fun showItem(name:String, price:String, imageUrl:String, description:String, seller:String){
+    private fun showItem(name:String, price:String, imageUrl:String, description:String, seller:String, id:String, zip:String){
         val dialogBuilder = AlertDialog.Builder(activity)
         val dialogView = mInflater.inflate(R.layout.item_info_fragment, null)
         dialogBuilder.setView(dialogView)
+        val dialog = dialogBuilder.show()
         val image = dialogView.findViewById<ImageView>(R.id.image)
         val priceTextView = dialogView.findViewById<TextView>(R.id.price)
         val nameTextView = dialogView.findViewById<TextView>(R.id.name)
@@ -118,7 +125,8 @@ class RecyclerViewAdapter(val list: MutableList<Item>, val activity: MainActivit
 
             deleteButton.layoutParams = ViewGroup.LayoutParams(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 75F, activity.resources.displayMetrics).toInt(), ViewGroup.LayoutParams.WRAP_CONTENT)
             deleteButton.setOnClickListener {
-
+                ref.child(id).removeValue()
+                dialog.dismiss()
             }
 
             val soldButton = Button(activity)
@@ -132,25 +140,38 @@ class RecyclerViewAdapter(val list: MutableList<Item>, val activity: MainActivit
 
             soldButton.layoutParams = ViewGroup.LayoutParams(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 75F, activity.resources.displayMetrics).toInt(), ViewGroup.LayoutParams.WRAP_CONTENT)
             soldButton.setOnClickListener {
-
+                //Mark Item as Sold
+                dialog.dismiss()
             }
 
             button.setText(R.string.edit_item)
-            button.layoutParams = ViewGroup.LayoutParams(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 75F, activity.resources.displayMetrics).toInt(), ViewGroup.LayoutParams.WRAP_CONTENT)
+            //button.layoutParams = ViewGroup.LayoutParams(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 75F, activity.resources.displayMetrics).toInt(), ViewGroup.LayoutParams.WRAP_CONTENT)
             button.setBackgroundColor(activity.resources.getColor(R.color.green, null))
             button.setTextColor(activity.resources.getColor(R.color.white, null))
             buttonLayout.addView(deleteButton)
             buttonLayout.addView(soldButton)
             button.setOnClickListener{
-                //Mark Item as Sold
-
+                //Edit Item
+                val bundle = Bundle()
+                bundle.putString("id", id)
+                bundle.putString("name", name)
+                bundle.putString("price", price)
+                bundle.putString("description", description)
+                bundle.putString("imageUrl", imageUrl)
+                bundle.putString("zip", zip)
+                activity.showPostItemFragment(bundle)
+                dialog.dismiss()
             }
         }else{
             button.setOnClickListener{
                 //Contact Seller
+                val bundle = Bundle()
+                bundle.putString("productId", id)
+                bundle.putString("buyer", activity.sUserName)
+                activity.showChatFragment(bundle)
+                dialog.dismiss()
             }
         }
-        dialogBuilder.show()
 
     }
 

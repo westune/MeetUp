@@ -1,8 +1,8 @@
 package com.example.lorenzo.meetup2.model
 
-class Item(val id: String,val description: String,val name: String, val zip: String, val price: String, val seller: String, val lon:Double, val lat:Double, val imageUrl:String?){
+class Item(val id: String,val description: String,val name: String, val zip: String, val price: String, val seller: String, val lon:Double, val lat:Double, val imageUrl:String?, val sold:Boolean){
 
-    constructor():this(" DEFAULT", " DEFAULT", "DEFAULT ", "DEFAULT ", " DEFAULT", "DEFAULT", 0.0, 0.0, "DEFAULT")
+    constructor():this(" DEFAULT", " DEFAULT", "DEFAULT ", "DEFAULT ", " DEFAULT", "DEFAULT", 0.0, 0.0, "DEFAULT", false)
 
 
 

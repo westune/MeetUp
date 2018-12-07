@@ -1,8 +1,10 @@
 package com.example.lorenzo.meetup2.fragments
 
 import android.content.Context
+import android.os.AsyncTask
 import android.os.Bundle
 import android.support.v4.app.Fragment
+import android.support.v4.content.AsyncTaskLoader
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.util.Log
@@ -13,7 +15,7 @@ import android.widget.Button
 import com.example.lorenzo.meetup2.MainActivity
 import com.example.lorenzo.meetup2.R
 import com.example.lorenzo.meetup2.model.Item
-import com.example.lorenzo.meetup2.model.RecyclerViewAdapter
+import com.example.lorenzo.meetup2.model.ItemRecyclerViewAdapter
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 
@@ -22,7 +24,7 @@ class ItemsForSaleFragment : Fragment() {
     private val LOG = "Items For Sale Fragment"
     private val LAYOUT = R.layout.items_for_sale_fragment
     private lateinit var recyclerView: RecyclerView
-    private lateinit var adapter: RecyclerViewAdapter
+    private lateinit var adapter: ItemRecyclerViewAdapter
     private var list: MutableList<Item> = mutableListOf()
     private lateinit var ref: DatabaseReference
     private lateinit var postButton: Button
@@ -48,13 +50,14 @@ class ItemsForSaleFragment : Fragment() {
         recyclerView.setHasFixedSize(true)
         recyclerView.layoutManager = LinearLayoutManager(this.context)
         postButton = view.findViewById(R.id.postButton)
+        list.clear()
         postButton.setOnClickListener { Button ->
             when (Button.id) {
-                R.id.postButton -> mActivity.showPostItemFragment()
+                R.id.postButton -> mActivity.showPostItemFragment(null)
             }
         }
         getItemsFromDb()
-        adapter = RecyclerViewAdapter(list, activity as MainActivity)
+        adapter = ItemRecyclerViewAdapter(list, activity as MainActivity)
         recyclerView.adapter = adapter
         return view
     }
@@ -103,19 +106,23 @@ class ItemsForSaleFragment : Fragment() {
                     TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
                 }
 
+
+
                 override fun onDataChange(data: DataSnapshot) {
+                    list.clear()
                     if (data.exists()) {
-                        for (i in data.children) {
-                            list.add(i.getValue(Item::class.java)!!)
-                        }
+                                for (i in data.children) {
+                                    list.add(i.getValue(Item::class.java)!!)
+                                }
                     }
-                    adapter = RecyclerViewAdapter(list, activity as MainActivity)
+                    adapter = ItemRecyclerViewAdapter(list, activity as MainActivity)
                     recyclerView.adapter = adapter
                 }
             })
         }
         thread.run()
     }
+
 
 
 }
