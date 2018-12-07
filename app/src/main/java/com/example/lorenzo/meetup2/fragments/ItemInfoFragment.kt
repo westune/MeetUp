@@ -10,25 +10,26 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+import com.example.lorenzo.meetup2.MainActivity
 import com.example.lorenzo.meetup2.R
+import com.google.firebase.auth.FirebaseAuth
 import com.squareup.picasso.Picasso
 
 class ItemInfoFragment:Fragment(){
-
 
     private lateinit var name:String
     private lateinit var price: String
     private lateinit var imageUrl: String
     private lateinit var description: String
+    private lateinit var seller: String
     private lateinit var image: ImageView
     private lateinit var nameText:TextView
     private lateinit var priceText:TextView
     private lateinit var descriptionText:TextView
     private lateinit var button:Button
     private val LAYOUT = R.layout.item_info_fragment
-
-
-
+    private val LOG = "Item Info Fragment"
+    private lateinit var mActivity:MainActivity
 
     override fun setArguments(args: Bundle?) {
         super.setArguments(args)
@@ -36,9 +37,9 @@ class ItemInfoFragment:Fragment(){
         price = args.get("price")!!.toString()
         imageUrl = args.get("imageUrl")!!.toString()
         description = args.get("description")!!.toString()
+        seller = args.get("seller")!!.toString()
     }
 
-    private val LOG = "Item Info Fragment"
 
     override fun onAttach(context: Context?) {
         Log.d(LOG, "On Attach")
@@ -53,17 +54,21 @@ class ItemInfoFragment:Fragment(){
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         Log.d(LOG, "On Create View")
         val view = inflater.inflate(LAYOUT, container, false)
-        button = view.findViewById(R.id.button)
-        nameText = view.findViewById(R.id.name)
-        priceText = view.findViewById(R.id.price)
-        descriptionText = view.findViewById(R.id.description)
-        image = view.findViewById(R.id.image)
+        setUpUi()
+        return view
+    }
+
+    private fun setUpUi(){
+        mActivity = activity as MainActivity
+        button = view!!.findViewById(R.id.button)
+        nameText = view!!.findViewById(R.id.name)
+        priceText = view!!.findViewById(R.id.price)
+        descriptionText = view!!.findViewById(R.id.description)
+        image = view!!.findViewById(R.id.image)
         nameText.text = name
         val p = "$" + price
         priceText.text = p
         descriptionText.text = description
-
-
         if(imageUrl != "") {
             Picasso.with(context)
                     .load(imageUrl)
@@ -77,8 +82,20 @@ class ItemInfoFragment:Fragment(){
                     .centerCrop()
                     .into(image)
         }
+        if(seller == FirebaseAuth.getInstance().currentUser!!.email.toString()){
+            button.setText(R.string.edit_item)
+            button.setBackgroundColor(resources.getColor(R.color.green, null))
+            button.setTextColor(resources.getColor(R.color.white, null))
+            button.setOnClickListener{
+                //Edit Item
 
-        return view
+            }
+        }else{
+            button.setOnClickListener{
+                //Contact Seller
+            }
+        }
+
     }
 
     override fun onStart() {
