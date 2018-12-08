@@ -22,14 +22,12 @@ class ChatFragment:Fragment(){
 
     private val LOG:String = "Chat Fragment"
     private val MESSAGES_CHILD:String = "messages"
-    private val ANONYMOUS:String = "anonymous"
     private var mProductId:String = ""
     private lateinit var mActivity:MainActivity
     private lateinit var mRef: DatabaseReference
     private lateinit var mUserRef: DatabaseReference
     private var mBuyer:String = ""
     private val mMessages:MutableList<ChatMessage> = mutableListOf()
-    private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: ChatRecyclerViewAdapter
 
     //UI Elements
@@ -53,7 +51,6 @@ class ChatFragment:Fragment(){
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(LOG, "On Create")
         mActivity = activity as MainActivity
-        mRef = FirebaseDatabase.getInstance().getReference("$MESSAGES_CHILD/$mProductId/$mBuyer")
         mUserRef = FirebaseDatabase.getInstance().getReference("users/$mBuyer")
         mLinearLayoutManager = LinearLayoutManager(this.activity)
         mLinearLayoutManager.stackFromEnd = true
@@ -63,11 +60,11 @@ class ChatFragment:Fragment(){
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         Log.d(LOG, "On Create View")
         val view = inflater.inflate(R.layout.chat_fragment, container, false)
-        recyclerView = view.findViewById(R.id.messageRecyclerView)
-        recyclerView.setHasFixedSize(true)
-        recyclerView.layoutManager = LinearLayoutManager(this.context)
-        adapter = ChatRecyclerViewAdapter(mMessages, activity as MainActivity)
-        recyclerView.adapter = adapter
+        mMessageRecyclerView = view.findViewById(R.id.messageRecyclerView)
+        mMessageRecyclerView.setHasFixedSize(true)
+        mMessageRecyclerView.layoutManager = LinearLayoutManager(this.context)
+        adapter = ChatRecyclerViewAdapter(mMessages, mActivity)
+        mMessageRecyclerView.adapter = adapter
         mSendButton = view.findViewById(R.id.sendButton)
         mSendButton.setOnClickListener {
             when(it.id){
@@ -77,20 +74,23 @@ class ChatFragment:Fragment(){
         mMessageRecyclerView = view.findViewById(R.id.messageRecyclerView)
         mProgressbar = view.findViewById(R.id.progressBar)
         mMessageEditText = view.findViewById(R.id.messageEditText)
+        mRef = FirebaseDatabase.getInstance().getReference("$MESSAGES_CHILD/$mProductId/$mBuyer")
         loadMessages()
         return view
     }
 
 
-    fun sendMessage(){
-        mMessageRecyclerView.scrollToPosition(0)
-        val chatMessage = ChatMessage(mMessageEditText.text.toString(),
-                mActivity.sUserName,
-                mActivity.sUserEmail)
-        if(mMessages.size == 0){
-            mUserRef.setValue(mProductId)
+    private fun sendMessage(){
+        if(!mMessageEditText.text.isEmpty()) {
+            val chatMessage = ChatMessage(mMessageEditText.text.toString(),
+                    mActivity.sUserName,
+                    mActivity.sUserEmail)
+            if (mMessages.size == 0) {
+                mUserRef.setValue(mProductId)
+            }
+            mRef.push().setValue(chatMessage)
+            mMessageEditText.setText("")
         }
-        mRef.push().setValue(chatMessage)
     }
 
     override fun onStart() {
@@ -100,7 +100,7 @@ class ChatFragment:Fragment(){
 
     override fun onResume() {
         Log.d(LOG, "On Resume")
-        mMessages
+        mRef = FirebaseDatabase.getInstance().getReference("$MESSAGES_CHILD/$mProductId/$mBuyer")
         super.onResume()
     }
 
@@ -134,16 +134,18 @@ class ChatFragment:Fragment(){
             mRef.addValueEventListener(object : ValueEventListener {
                 override fun onCancelled(p0: DatabaseError) {}
 
-
-
                 override fun onDataChange(data: DataSnapshot) {
                     if (data.exists()) {
+                        mMessages.clear()
                         for(i in data.children){
-                            mMessages.add(i.getValue(ChatMessage::class.java)!!)
+                            val message = i.getValue(ChatMessage::class.java)!!
+                            mMessages.add(message)
                         }
                     }
-                    adapter = ChatRecyclerViewAdapter(mMessages, activity as MainActivity)
-                    recyclerView.adapter = adapter
+                    adapter = ChatRecyclerViewAdapter(mMessages, mActivity)
+                    mMessageRecyclerView.scrollToPosition(mMessages.size - 1)
+                    mMessageRecyclerView.adapter = adapter
+                    mProgressbar.visibility = View.INVISIBLE
                 }
             })
         }

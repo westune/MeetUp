@@ -38,7 +38,6 @@ class ItemRecyclerViewAdapter(val list: MutableList<Item>, val activity: MainAct
     private lateinit var view:View
     private lateinit var mInflater:LayoutInflater
     private lateinit var ref:DatabaseReference
-    private lateinit var itemId:String
 
     override fun onCreateViewHolder(p0: ViewGroup, p1: Int): RecyclerView.ViewHolder {
         mInflater = LayoutInflater.from(p0.context)
@@ -145,7 +144,6 @@ class ItemRecyclerViewAdapter(val list: MutableList<Item>, val activity: MainAct
             }
 
             button.setText(R.string.edit_item)
-            //button.layoutParams = ViewGroup.LayoutParams(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 75F, activity.resources.displayMetrics).toInt(), ViewGroup.LayoutParams.WRAP_CONTENT)
             button.setBackgroundColor(activity.resources.getColor(R.color.green, null))
             button.setTextColor(activity.resources.getColor(R.color.white, null))
             buttonLayout.addView(deleteButton)
