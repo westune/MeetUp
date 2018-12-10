@@ -11,6 +11,7 @@ import android.provider.Settings
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import android.support.design.widget.BottomNavigationView
+import android.support.design.widget.NavigationView
 import android.support.v4.app.Fragment
 import android.support.v7.app.AppCompatActivity
 import android.view.MenuItem
@@ -18,9 +19,16 @@ import android.view.View
 import android.widget.AdapterView
 import android.widget.Toast
 import com.example.lorenzo.meetup2.fragments.*
+import com.example.lorenzo.meetup2.model.Item
+import com.example.lorenzo.meetup2.model.ItemRecyclerViewAdapter
+import com.google.android.gms.auth.api.Auth
 import com.google.android.gms.common.api.GoogleApiClient
 import kotlinx.android.synthetic.main.activity_main.*
 import com.google.android.gms.common.ConnectionResult
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 
 /*
 TUTORIALS FOLLOWED:
@@ -36,13 +44,15 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
     //Fragment Manager
     private val manager = supportFragmentManager
     //Firebase Auth
-    private var mAuth:FirebaseAuth? = null
-    private var mUser:FirebaseUser? = null
-    var sUserName:String = ""
+    private var mAuth: FirebaseAuth? = null
+    private var mUser: FirebaseUser? = null
+    var sUserName: String = ""
     var sLocation: Location? = null
-    var sUserEmail:String = ""
+    var sUserEmail: String = ""
+    private lateinit var mGoogleApiClient:GoogleApiClient
     private lateinit var mLocationManager: LocationManager
-    private var permission = arrayOf(android.Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION)
+    var permission = arrayOf(android.Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION)
+    var sellList: MutableList<Item> = mutableListOf()
 
     private val mOnNavigationItemSelectedListener = BottomNavigationView.OnNavigationItemSelectedListener { item ->
         when (item.itemId) {
@@ -55,14 +65,24 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
                 return@OnNavigationItemSelectedListener true
             }
             R.id.navigation_messages -> {
-                showConversationsFragment()
+                showConvoFragment()
                 return@OnNavigationItemSelectedListener true
             }
+            /*R.id.sign_out -> {
+                if(sUserName != "") {
+                    mAuth!!.signOut()
+                    Auth.GoogleSignInApi.signOut(mGoogleApiClient)
+                    sUserName = ""
+                    sUserEmail = ""
+                }
+                val intent = Intent(this, SignInActivity::class.java)
+                startActivity(intent)
+            }*/
         }
         false
     }
 
-    override fun onConnectionFailed(p0: ConnectionResult){}
+    override fun onConnectionFailed(p0: ConnectionResult) {}
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -70,14 +90,22 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
         mUser = mAuth!!.currentUser
         mLocationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
         setContentView(R.layout.activity_main)
-
-
-        if(checkSelfPermission(permission[0]) == PackageManager.PERMISSION_DENIED || checkSelfPermission(permission[1]) == PackageManager.PERMISSION_DENIED){
-            requestPermissions(permission, 0)
+        showBuyListFragment()
+        mGoogleApiClient = GoogleApiClient.Builder(this)
+                .enableAutoManage(this, this)
+                .addApi(Auth.GOOGLE_SIGN_IN_API)
+                .build()
+        if(mUser != null){
+            sUserName = mUser!!.displayName!!
+            sUserEmail = FirebaseAuth.getInstance().currentUser!!.email.toString()
         }
+        getItemsFromDb()
+        navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener)
+    }
 
 
-        if(mUser == null){
+    fun checkIfUserIsSignedIn(){
+        if (mUser == null) {
             val intent = Intent(this, SignInActivity::class.java)
             startActivity(intent)
             finish()
@@ -86,105 +114,85 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
             sUserName = mUser!!.displayName!!
             sUserEmail = FirebaseAuth.getInstance().currentUser!!.email.toString()
         }
-        showBuyListFragment()
-        navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener)
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        /*
-        when(item.itemId){
-            R.id.sign_out_menu ->{
-                mAuth!!.signOut()
-                Auth.GoogleSignInApi.signOut(mGoogleApiClient)
-                mUserName = ""
-                val intent = Intent(this, SignInActivity::class.java)
-                startActivity(intent)
-                return true
-            }
-            else -> {
-                Log.d(TAG, "yes")
-                return super.onOptionsItemSelected(item)
-            }
-        }
-        */
-        return super.onOptionsItemSelected(item)
-    }
 
-    private fun showBuyListFragment(){
+    private fun showBuyListFragment() {
         val transaction = manager.beginTransaction()
-        val fragment:Fragment?
-        if(manager.findFragmentByTag("buy") == null){
+        val fragment: Fragment?
+        if (manager.findFragmentByTag("buy") == null) {
             fragment = BuyListFragment()
             transaction.add(fragment, "buy")
             transaction.addToBackStack(null)
-        }else{
+        } else {
             fragment = manager.findFragmentByTag("buy")
         }
         transaction.replace(R.id.fragment_layout, fragment!!)
         transaction.commit()
     }
 
-    fun showChatFragment(bundle: Bundle?){
+
+    fun showChatFragment(bundle: Bundle?) {
         val transaction = manager.beginTransaction()
-        val fragment:Fragment?
-        if(manager.findFragmentByTag("chat") == null){
+        val fragment: Fragment?
+        if (manager.findFragmentByTag("chat") == null) {
             fragment = ChatFragment()
             transaction.add(fragment, "chat")
             transaction.addToBackStack(null)
-        }else{
+        } else {
             fragment = manager.findFragmentByTag("chat")
         }
         transaction.replace(R.id.fragment_layout, fragment!!)
         transaction.commit()
-        if(bundle != null){
+        if (bundle != null) {
             fragment.arguments = bundle
         }
     }
 
-    fun showItemsForSaleFragment(){
+    private fun showConvoFragment() {
         val transaction = manager.beginTransaction()
-        val fragment:Fragment?
-        if(manager.findFragmentByTag("itemsforsale") == null){
+        val fragment: Fragment?
+        if (manager.findFragmentByTag("convo") == null) {
+            fragment = ConvosFragment()
+            transaction.add(fragment, "convo")
+            transaction.addToBackStack(null)
+        } else {
+            fragment = manager.findFragmentByTag("convo")
+        }
+        transaction.replace(R.id.fragment_layout, fragment!!)
+        transaction.commit()
+    }
+
+    fun showItemsForSaleFragment() {
+        val transaction = manager.beginTransaction()
+        val fragment: Fragment?
+        if (manager.findFragmentByTag("itemsforsale") == null) {
             fragment = ItemsForSaleFragment()
             transaction.add(fragment, "itemsforsale")
             transaction.addToBackStack(null)
-        }else{
+        } else {
             fragment = manager.findFragmentByTag("itemsforsale")
         }
         transaction.replace(R.id.fragment_layout, fragment!!)
         transaction.commit()
     }
 
-    fun showPostItemFragment(bundle:Bundle?){
+    fun showPostItemFragment(bundle: Bundle?) {
         val transaction = manager.beginTransaction()
-        val fragment:Fragment?
-        if(manager.findFragmentByTag("postitem") == null){
+        val fragment: Fragment?
+        if (manager.findFragmentByTag("postitem") == null) {
             fragment = PostItemFragment()
             transaction.add(fragment, "postitem")
             transaction.addToBackStack(null)
-        }else{
+        } else {
             fragment = manager.findFragmentByTag("postitem")
         }
 
         transaction.replace(R.id.fragment_layout, fragment!!)
         transaction.commit()
-        if(bundle != null){
+        if (bundle != null) {
             fragment.arguments = bundle
         }
-    }
-
-    private fun showConversationsFragment(){
-        val transaction = manager.beginTransaction()
-        val fragment:Fragment?
-        if(manager.findFragmentByTag("conversations") == null){
-            fragment = ChatFragment()
-            transaction.add(fragment, "conversations")
-            transaction.addToBackStack(null)
-        }else{
-            fragment = manager.findFragmentByTag("conversations")
-        }
-        transaction.replace(R.id.fragment_layout, fragment!!)
-        transaction.commit()
     }
 
 
@@ -192,42 +200,73 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
     override fun onItemSelected(adapterView: AdapterView<*>?, view: View?, position: Int, p3: Long) {}
 
     @SuppressLint("MissingPermission")
-    fun getZip():String {
-        val hasGps = mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+    fun getZip(): String {
         var result = ""
-        if (hasGps) {
-            mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0F, object : LocationListener {
-                override fun onLocationChanged(loc: Location?) {
-                    if (loc != null) {
-                        sLocation = loc
-                    }
-                }
-
-                override fun onStatusChanged(p0: String?, p1: Int, p2: Bundle?){}
-                override fun onProviderEnabled(p0: String?) {}
-                override fun onProviderDisabled(p0: String?) {}
-
-            })
-
-            val localGpsLocation = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-            if (localGpsLocation != null) {
-                sLocation = localGpsLocation
-                val geocoder = Geocoder(this)
-                val address = geocoder.getFromLocation(sLocation!!.latitude, sLocation!!.longitude, 1)
-                result =  address[0].postalCode
-            }else{
-                Toast.makeText(this, "Unable To Use Location", Toast.LENGTH_LONG).show()
-            }
+        if (checkSelfPermission(permission[0]) == PackageManager.PERMISSION_DENIED || checkSelfPermission(permission[1]) == PackageManager.PERMISSION_DENIED) {
+            requestPermissions(permission, 0)
         } else {
-            startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+            val hasGps = mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+            if (hasGps) {
+                mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0F, object : LocationListener {
+                    override fun onLocationChanged(loc: Location?) {
+                        if (loc != null) {
+                            sLocation = loc
+                        }
+                    }
+
+                    override fun onStatusChanged(p0: String?, p1: Int, p2: Bundle?) {}
+                    override fun onProviderEnabled(p0: String?) {}
+                    override fun onProviderDisabled(p0: String?) {}
+
+                })
+
+                val localGpsLocation = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                if (localGpsLocation != null) {
+                    sLocation = localGpsLocation
+                    val geoCoder = Geocoder(this)
+                    val address = geoCoder.getFromLocation(sLocation!!.latitude, sLocation!!.longitude, 1)
+                    result = address[0].postalCode
+                } else {
+                    Toast.makeText(this, "Unable To Use Location", Toast.LENGTH_LONG).show()
+                }
+            } else {
+                startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+            }
         }
         return result
+
     }
 
-    fun getAddress(zip:String): Address? {
+    fun getAddress(zip: String): Address? {
         val geocoder = Geocoder(this)
         val address = geocoder.getFromLocationName(zip, 1)
-        if(address == null || address.size == 0) {return null}
-        else return address[0]
+        if (address == null || address.size == 0) {
+            return null
+        } else return address[0]
+    }
+
+    private fun getItemsFromDb() {
+        val query = FirebaseDatabase.getInstance().getReference("Items").orderByChild("seller").equalTo(FirebaseAuth.getInstance().currentUser!!.email.toString())
+        val thread = Thread {
+            query.addValueEventListener(object : ValueEventListener {
+                override fun onCancelled(p0: DatabaseError) {
+                    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+                }
+
+                override fun onDataChange(data: DataSnapshot) {
+                    sellList.clear()
+                    if (data.exists()) {
+                        for (i in data.children) {
+                            sellList.add(i.getValue(Item::class.java)!!)
+                            val itemsForSale = manager.findFragmentByTag("itemsforsale")
+                            if (itemsForSale != null) {
+                                (itemsForSale as ItemsForSaleFragment).getItemsFromDb()
+                            }
+                        }
+                    }
+                }
+            })
+        }
+        thread.run()
     }
 }

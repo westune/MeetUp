@@ -25,7 +25,6 @@ class ItemsForSaleFragment : Fragment() {
     private val LAYOUT = R.layout.items_for_sale_fragment
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: ItemRecyclerViewAdapter
-    private var list: MutableList<Item> = mutableListOf()
     private lateinit var ref: DatabaseReference
     private lateinit var postButton: Button
     private lateinit var mActivity: MainActivity
@@ -50,15 +49,13 @@ class ItemsForSaleFragment : Fragment() {
         recyclerView.setHasFixedSize(true)
         recyclerView.layoutManager = LinearLayoutManager(this.context)
         postButton = view.findViewById(R.id.postButton)
-        list.clear()
         postButton.setOnClickListener { Button ->
             when (Button.id) {
                 R.id.postButton -> mActivity.showPostItemFragment(null)
             }
         }
+        mActivity.checkIfUserIsSignedIn()
         getItemsFromDb()
-        adapter = ItemRecyclerViewAdapter(list, activity as MainActivity)
-        recyclerView.adapter = adapter
         return view
     }
 
@@ -98,27 +95,9 @@ class ItemsForSaleFragment : Fragment() {
     }
 
 
-    private fun getItemsFromDb() {
-        val query = ref.orderByChild("seller").equalTo(FirebaseAuth.getInstance().currentUser!!.email.toString())
-        val thread = Thread {
-            query.addValueEventListener(object : ValueEventListener {
-                override fun onCancelled(p0: DatabaseError) {
-                    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-                }
-
-                override fun onDataChange(data: DataSnapshot) {
-                    list.clear()
-                    if (data.exists()) {
-                                for (i in data.children) {
-                                    list.add(i.getValue(Item::class.java)!!)
-                                }
-                    }
-                    adapter = ItemRecyclerViewAdapter(list, activity as MainActivity)
-                    recyclerView.adapter = adapter
-                }
-            })
-        }
-        thread.run()
+    fun getItemsFromDb() {
+        adapter = ItemRecyclerViewAdapter(mActivity.sellList, mActivity, this, false)
+        recyclerView.adapter = adapter
     }
 
 

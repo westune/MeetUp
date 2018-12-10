@@ -20,5 +20,9 @@
     <string name="edit_item">Edit</string>
     <string name="delete_item">Delete</string>
     <string name="mark_item_as_sold">Sold!</string>
-
+    <string name="confirm">Confirm</string>
+    <string name="cancel">Cancel</string>
+    <string name="are_you_sure">Are You Sure?</string>
+    <string name="permenant">This action is permanent</string>
+    <string name="sign_out">Sign Out</string>
 </resources>

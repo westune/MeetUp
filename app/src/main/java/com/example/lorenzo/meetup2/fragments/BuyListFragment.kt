@@ -170,6 +170,7 @@ class BuyListFragment : Fragment(), AdapterView.OnItemSelectedListener {
     private fun getItemsFromDb() {
         list.clear()
         val query = ref.orderByChild("lon")
+        val fragment = this
         val thread = Thread {
             query.addValueEventListener(object : ValueEventListener {
                 override fun onCancelled(p0: DatabaseError) {}
@@ -181,7 +182,7 @@ class BuyListFragment : Fragment(), AdapterView.OnItemSelectedListener {
                             list.add(i.getValue(Item::class.java)!!)
                         }
                     }
-                    adapter = ItemRecyclerViewAdapter(list, activity as MainActivity)
+                    adapter = ItemRecyclerViewAdapter(list, mActivity, fragment, false)
                     recyclerView.adapter = adapter
                 }
             })
@@ -197,6 +198,7 @@ class BuyListFragment : Fragment(), AdapterView.OnItemSelectedListener {
         val query = ref.orderByChild("lat")
                 .startAt((lat - latMile * distance))
                 .endAt((lat + latMile * distance))
+        val fragment = this
         val thread = Thread {
             query.addValueEventListener(object : ValueEventListener {
                 override fun onCancelled(p0: DatabaseError) {}
@@ -211,7 +213,7 @@ class BuyListFragment : Fragment(), AdapterView.OnItemSelectedListener {
                             }
                         }
                     }
-                    adapter = ItemRecyclerViewAdapter(list, activity as MainActivity)
+                    adapter = ItemRecyclerViewAdapter(list, mActivity, fragment , false)
                     recyclerView.adapter = adapter
                 }
             })

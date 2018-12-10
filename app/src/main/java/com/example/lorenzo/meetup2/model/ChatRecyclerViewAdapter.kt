@@ -1,32 +1,14 @@
 package com.example.lorenzo.meetup2.model
 
 
-import android.app.AlertDialog
-import android.content.Context
-import android.content.res.Resources
-import android.os.Bundle
-import android.support.design.R.id.center
-import android.support.design.R.id.right
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.LinearLayout
 import android.widget.TextView
-import com.example.lorenzo.meetup2.fragments.ItemInfoFragment
-import android.support.v4.app.FragmentManager
-import android.support.v4.content.ContextCompat.getColor
-import android.text.Layout
-import android.util.Log
-import android.util.TypedValue
 import android.view.Gravity
-import android.widget.Button
 import com.example.lorenzo.meetup2.MainActivity
 import com.example.lorenzo.meetup2.R
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.*
-import com.squareup.picasso.Picasso
 
 /*
 resources Used:
@@ -49,7 +31,7 @@ class ChatRecyclerViewAdapter(val list: MutableList<ChatMessage>, val mActivity:
         val viewHolder:ViewHolder = holder as ViewHolder
         val message:ChatMessage = list[position]
         if(message.sender == mActivity.sUserName){
-            viewHolder.body.gravity = Gravity.RIGHT
+            viewHolder.body.gravity = Gravity.END
         }
         viewHolder.body.text = message.body
     }
@@ -61,14 +43,6 @@ class ChatRecyclerViewAdapter(val list: MutableList<ChatMessage>, val mActivity:
     class ViewHolder(itemView: View):RecyclerView.ViewHolder(itemView){
         val body = itemView.findViewById<TextView>(R.id.body)!!
     }
-
-
-
-
-
-
-
-
 
 
 }

@@ -51,7 +51,7 @@ class ChatFragment:Fragment(){
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(LOG, "On Create")
         mActivity = activity as MainActivity
-        mUserRef = FirebaseDatabase.getInstance().getReference("users/$mBuyer")
+        mUserRef = FirebaseDatabase.getInstance().getReference("users/$mBuyer/$mProductId")
         mLinearLayoutManager = LinearLayoutManager(this.activity)
         mLinearLayoutManager.stackFromEnd = true
         super.onCreate(savedInstanceState)

@@ -2,29 +2,26 @@ package com.example.lorenzo.meetup2.model
 
 
 import android.app.AlertDialog
-import android.content.Context
-import android.content.res.Resources
 import android.os.Bundle
-import android.support.design.R.id.action_image
 import android.support.design.R.id.center
+import android.support.v4.app.Fragment
+import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import com.example.lorenzo.meetup2.fragments.ItemInfoFragment
-import android.support.v4.app.FragmentManager
-import android.support.v4.content.ContextCompat.getColor
-import android.text.Layout
 import android.util.TypedValue
 import android.widget.Button
 import com.example.lorenzo.meetup2.MainActivity
 import com.example.lorenzo.meetup2.R
+import com.example.lorenzo.meetup2.fragments.BuyListFragment
+import com.example.lorenzo.meetup2.fragments.ConvosFragment
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.*
 import com.squareup.picasso.Picasso
 
 /*
@@ -32,17 +29,20 @@ resources Used:
 https://stackoverflow.com/questions/5959870/programmatically-set-height-on-layoutparams-as-density-independent-pixels
  */
 
-class ItemRecyclerViewAdapter(val list: MutableList<Item>, val activity: MainActivity): RecyclerView.Adapter<RecyclerView.ViewHolder>(){
+class ItemRecyclerViewAdapter(private val list: List<Item>, private val activity: MainActivity, private val fragment: Fragment, private val sell:Boolean): RecyclerView.Adapter<RecyclerView.ViewHolder>(){
 
     private val LAYOUT = R.layout.item_card
     private lateinit var view:View
     private lateinit var mInflater:LayoutInflater
     private lateinit var ref:DatabaseReference
+    private val mSellDataSnapshotList: MutableList<DataSnapshot> = mutableListOf()
+    private lateinit var mRecyclerView:RecyclerView
+    private val mActivity = activity
 
     override fun onCreateViewHolder(p0: ViewGroup, p1: Int): RecyclerView.ViewHolder {
         mInflater = LayoutInflater.from(p0.context)
         view = mInflater.inflate(LAYOUT, p0, false)
-        ref = FirebaseDatabase.getInstance().getReference("Messages")
+        ref = FirebaseDatabase.getInstance().getReference("Items")
         return ViewHolder(view)
     }
 
@@ -67,10 +67,61 @@ class ItemRecyclerViewAdapter(val list: MutableList<Item>, val activity: MainAct
                     .centerCrop()
                     .into(viewHolder.image)
         }
-
         holder.layout.setOnClickListener{
-            showItem(item.name, item.price, item.imageUrl!!, item.description, item.seller, item.id, item.zip)
+            when(fragment.javaClass){
+                ConvosFragment::class.java -> {
+                    when(sell){
+                        true -> showConvos(item)
+                        false -> openChat(item)
+                    }
+                }
+                else -> showItem(item)
+            }
         }
+    }
+
+    private fun showConvos(item: Item){
+        val dialogBuilder = AlertDialog.Builder(activity)
+        val dialogView = mInflater.inflate(R.layout.convo_list, null)
+        dialogBuilder.setView(dialogView)
+        val dialog = dialogBuilder.show()
+        mRecyclerView = dialogView.findViewById(R.id.recyclerView)
+        mRecyclerView.adapter = ConvosRecyclerViewAdapter(mSellDataSnapshotList, mActivity, null)
+        mRecyclerView.layoutManager = LinearLayoutManager(activity)
+        val nameText = dialogView.findViewById<TextView>(R.id.name)
+        nameText.text = item.name
+        getConvos(item.id, dialog)
+    }
+
+    private fun getConvos(itemId:String, dialog:AlertDialog){
+        var thread = Thread()
+        Log.d("id", itemId)
+        val query = FirebaseDatabase.getInstance().getReference("messages/$itemId").orderByValue()
+        thread = Thread {
+            query.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onCancelled(p0: DatabaseError) {}
+
+                override fun onDataChange(data: DataSnapshot) {
+                    if (data.exists()) {
+                        mSellDataSnapshotList.clear()
+                        for(i in data.children) {
+                            //Persons name: Log.d("VALUE", i.ref.key.toString())
+                            mSellDataSnapshotList.add(i)
+                        }
+                        mRecyclerView.adapter = ConvosRecyclerViewAdapter(mSellDataSnapshotList, mActivity, dialog)
+                    }
+                    thread.interrupt()
+                }
+            })
+        }
+        thread.run()
+    }
+    private fun openChat(item:Item){
+        val bundle = Bundle()
+        bundle.putString("productId", item.id)
+        bundle.putString("buyer", activity.sUserName)
+        activity.showChatFragment(bundle)
+
     }
 
     override fun getItemCount(): Int {
@@ -85,9 +136,9 @@ class ItemRecyclerViewAdapter(val list: MutableList<Item>, val activity: MainAct
     }
 
 
-    private fun showItem(name:String, price:String, imageUrl:String, description:String, seller:String, id:String, zip:String){
+    private fun showItem(item:Item){
         val dialogBuilder = AlertDialog.Builder(activity)
-        val dialogView = mInflater.inflate(R.layout.item_info_fragment, null)
+        var dialogView = mInflater.inflate(R.layout.item_info_fragment, null)
         dialogBuilder.setView(dialogView)
         val dialog = dialogBuilder.show()
         val image = dialogView.findViewById<ImageView>(R.id.image)
@@ -96,9 +147,9 @@ class ItemRecyclerViewAdapter(val list: MutableList<Item>, val activity: MainAct
         val descriptionTextView = dialogView.findViewById<TextView>(R.id.description)
         val button = dialogView.findViewById<Button>(R.id.button)
         val buttonLayout = dialogView.findViewById<LinearLayout>(R.id.buttonLayout)
-        if(imageUrl != "") {
+        if(item.imageUrl != "") {
             Picasso.with(activity)
-                    .load(imageUrl)
+                    .load(item.imageUrl)
                     .fit()
                     .centerInside()
                     .into(image)
@@ -109,10 +160,10 @@ class ItemRecyclerViewAdapter(val list: MutableList<Item>, val activity: MainAct
                     .centerInside()
                     .into(image)
         }
-        priceTextView.setText("$" + price)
-        nameTextView.text = name
-        descriptionTextView.text = description
-        if(seller == FirebaseAuth.getInstance().currentUser!!.email.toString()){
+        priceTextView.setText("$" + item.price)
+        nameTextView.text = item.name
+        descriptionTextView.text = item.description
+        if(item.seller == FirebaseAuth.getInstance().currentUser!!.email.toString()){
             val deleteButton = Button(activity)
             deleteButton.setText(R.string.delete_item)
             deleteButton.setBackgroundColor(activity.resources.getColor(R.color.red, null))
@@ -124,8 +175,19 @@ class ItemRecyclerViewAdapter(val list: MutableList<Item>, val activity: MainAct
 
             deleteButton.layoutParams = ViewGroup.LayoutParams(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 75F, activity.resources.displayMetrics).toInt(), ViewGroup.LayoutParams.WRAP_CONTENT)
             deleteButton.setOnClickListener {
-                ref.child(id).removeValue()
-                dialog.dismiss()
+                dialogView = mInflater.inflate(R.layout.delete_alert, null)
+                dialogBuilder.setView(dialogView)
+                val cancelButton = dialogView.findViewById<Button>(R.id.cancel_button)
+                val deleteButton1 = dialogView.findViewById<Button>(R.id.delete_button)
+                val popUp = dialogBuilder.show()
+                cancelButton.setOnClickListener {
+                    popUp.dismiss()
+                }
+                deleteButton1.setOnClickListener{
+                    ref.child(item.id).removeValue()
+                    dialog.dismiss()
+                    popUp.dismiss()
+                }
             }
 
             val soldButton = Button(activity)
@@ -140,7 +202,25 @@ class ItemRecyclerViewAdapter(val list: MutableList<Item>, val activity: MainAct
             soldButton.layoutParams = ViewGroup.LayoutParams(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 75F, activity.resources.displayMetrics).toInt(), ViewGroup.LayoutParams.WRAP_CONTENT)
             soldButton.setOnClickListener {
                 //Mark Item as Sold
-                dialog.dismiss()
+
+                dialogView = mInflater.inflate(R.layout.delete_alert, null)
+                dialogBuilder.setView(dialogView)
+                val cancelButton = dialogView.findViewById<Button>(R.id.cancel_button)
+                val soldButton = dialogView.findViewById<Button>(R.id.delete_button)
+                val popUp = dialogBuilder.show()
+                cancelButton.setOnClickListener {
+                    popUp.dismiss()
+                }
+                soldButton.setOnClickListener{
+                    val newItem = Item(item.id, item.description,
+                            item.name, item.zip,
+                            item.price, item.seller,
+                            item.lon, item.lat,
+                            item.imageUrl, true)
+                    ref.child(item.id).setValue(newItem)
+                    dialog.dismiss()
+                    popUp.dismiss()
+                }
             }
 
             button.setText(R.string.edit_item)
@@ -151,20 +231,21 @@ class ItemRecyclerViewAdapter(val list: MutableList<Item>, val activity: MainAct
             button.setOnClickListener{
                 //Edit Item
                 val bundle = Bundle()
-                bundle.putString("id", id)
-                bundle.putString("name", name)
-                bundle.putString("price", price)
-                bundle.putString("description", description)
-                bundle.putString("imageUrl", imageUrl)
-                bundle.putString("zip", zip)
+                bundle.putString("id", item.id)
+                bundle.putString("name", item.name)
+                bundle.putString("price", item.price)
+                bundle.putString("description", item.description)
+                bundle.putString("imageUrl", item.imageUrl)
+                bundle.putString("zip", item.zip)
                 activity.showPostItemFragment(bundle)
                 dialog.dismiss()
             }
         }else{
             button.setOnClickListener{
                 //Contact Seller
+                mActivity.checkIfUserIsSignedIn()
                 val bundle = Bundle()
-                bundle.putString("productId", id)
+                bundle.putString("productId", item.id)
                 bundle.putString("buyer", activity.sUserName)
                 activity.showChatFragment(bundle)
                 dialog.dismiss()

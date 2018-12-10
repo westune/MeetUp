@@ -25,9 +25,9 @@ class SignInActivity: AppCompatActivity(), GoogleApiClient.OnConnectionFailedLis
 
     private val TAG = "Sign In Activity"
     private val RC_SIGN_IN = 9001
-    private var mAuth:FirebaseAuth? = null
-    private var mGoogleApiClient:GoogleApiClient? = null
-    private var mSignInButton:SignInButton? = null
+    private lateinit var mAuth:FirebaseAuth
+    private lateinit var mGoogleApiClient:GoogleApiClient
+    private lateinit var mSignInButton:SignInButton
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,7 +36,7 @@ class SignInActivity: AppCompatActivity(), GoogleApiClient.OnConnectionFailedLis
 
         //Sign In Button Listener
         mSignInButton = findViewById(R.id.sign_in_button)
-        mSignInButton!!.setOnClickListener(this)
+        mSignInButton.setOnClickListener(this)
 
         //Configure Google Sign In
         val googleSignInOptions:GoogleSignInOptions = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -66,10 +66,10 @@ class SignInActivity: AppCompatActivity(), GoogleApiClient.OnConnectionFailedLis
         super.onActivityResult(requestCode, resultCode, data)
 
         if(requestCode == RC_SIGN_IN){
-            var result:GoogleSignInResult = Auth.GoogleSignInApi.getSignInResultFromIntent(data)
+            val result:GoogleSignInResult = Auth.GoogleSignInApi.getSignInResultFromIntent(data)
             Log.d(TAG, resultCode.toString())
             if(result.isSuccess){
-                var account:GoogleSignInAccount? = result.signInAccount
+                val account:GoogleSignInAccount? = result.signInAccount
                 firebaseAuthWithGoogle(account!!)
             } else{
                 Log.d(TAG, "Google Sign in failed")
@@ -82,14 +82,14 @@ class SignInActivity: AppCompatActivity(), GoogleApiClient.OnConnectionFailedLis
     }
 
     private fun firebaseAuthWithGoogle(account: GoogleSignInAccount){
-        var cred: AuthCredential = GoogleAuthProvider.getCredential(account.idToken, null)
-        mAuth!!.signInWithCredential(cred).addOnCompleteListener(this){
+        val cred: AuthCredential = GoogleAuthProvider.getCredential(account.idToken, null)
+        mAuth.signInWithCredential(cred).addOnCompleteListener(this){
             Log.d(TAG, "SignInWithCredential:onComplete: " + it.isSuccessful)
             if(!it.isSuccessful){
                 Log.w(TAG, "signInWithCredentail", it.exception)
-                Toast.makeText(this, "Authentication Failed", Toast.LENGTH_SHORT)
+                Toast.makeText(this, "Authentication Failed", Toast.LENGTH_SHORT).show()
             }else{
-                var intent:Intent = Intent(this, MainActivity::class.java)
+                var intent = Intent(this, MainActivity::class.java)
                 startActivity(intent)
                 finish()
             }
