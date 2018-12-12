@@ -41,9 +41,10 @@ class ConvosFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(LOG, "On Create")
+        mActivity = activity as MainActivity
+        mActivity.checkIfUserIsSignedIn()
         ref = FirebaseDatabase.getInstance().getReference("Items")
         fragment = this
-        mActivity = activity as MainActivity
         super.onCreate(savedInstanceState)
     }
 
@@ -60,7 +61,6 @@ class ConvosFragment : Fragment() {
         sellAdapter = ItemRecyclerViewAdapter(mActivity.sellList, mActivity, this, true)
         setUpButtons()
         checkBuy()
-        mActivity.checkIfUserIsSignedIn()
         return view
     }
 
@@ -162,6 +162,4 @@ class ConvosFragment : Fragment() {
         Log.d(LOG, "On Destroy View")
         super.onDestroyView()
     }
-
-
 }

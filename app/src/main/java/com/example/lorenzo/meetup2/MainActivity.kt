@@ -14,6 +14,7 @@ import android.support.design.widget.BottomNavigationView
 import android.support.design.widget.NavigationView
 import android.support.v4.app.Fragment
 import android.support.v7.app.AppCompatActivity
+import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.AdapterView
@@ -53,6 +54,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
     private lateinit var mLocationManager: LocationManager
     var permission = arrayOf(android.Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION)
     var sellList: MutableList<Item> = mutableListOf()
+    var itemsForSaleList: MutableList<Item> = mutableListOf()
 
     private val mOnNavigationItemSelectedListener = BottomNavigationView.OnNavigationItemSelectedListener { item ->
         when (item.itemId) {
@@ -68,16 +70,6 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
                 showConvoFragment()
                 return@OnNavigationItemSelectedListener true
             }
-            /*R.id.sign_out -> {
-                if(sUserName != "") {
-                    mAuth!!.signOut()
-                    Auth.GoogleSignInApi.signOut(mGoogleApiClient)
-                    sUserName = ""
-                    sUserEmail = ""
-                }
-                val intent = Intent(this, SignInActivity::class.java)
-                startActivity(intent)
-            }*/
         }
         false
     }
@@ -103,7 +95,6 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener)
     }
 
-
     fun checkIfUserIsSignedIn(){
         if (mUser == null) {
             val intent = Intent(this, SignInActivity::class.java)
@@ -114,6 +105,29 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
             sUserName = mUser!!.displayName!!
             sUserEmail = FirebaseAuth.getInstance().currentUser!!.email.toString()
         }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.options, menu)
+        if(sUserName == ""){
+            menu!!.findItem(R.id.sign_out_menu).title = "Sign In"
+        }
+        return true
+    }
+
+
+    override fun onOptionsItemSelected(menuItem: MenuItem): Boolean {
+         when(menuItem.itemId){
+             R.id.sign_out_menu -> {
+                 mAuth!!.signOut()
+                 Auth.GoogleSignInApi.signOut(mGoogleApiClient)
+                 sUserName = ""
+                 sUserEmail = ""
+             }
+         }
+        val intent = Intent(this, SignInActivity::class.java)
+        startActivity(intent)
+        return true
     }
 
 
@@ -246,7 +260,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
     }
 
     private fun getItemsFromDb() {
-        val query = FirebaseDatabase.getInstance().getReference("Items").orderByChild("seller").equalTo(FirebaseAuth.getInstance().currentUser!!.email.toString())
+        val query = FirebaseDatabase.getInstance().getReference("Items").orderByChild("seller")
         val thread = Thread {
             query.addValueEventListener(object : ValueEventListener {
                 override fun onCancelled(p0: DatabaseError) {

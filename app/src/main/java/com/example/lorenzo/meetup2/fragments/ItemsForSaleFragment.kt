@@ -37,8 +37,9 @@ class ItemsForSaleFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(LOG, "On Create")
-        ref = FirebaseDatabase.getInstance().getReference("Items")
         mActivity = activity as MainActivity
+        mActivity.checkIfUserIsSignedIn()
+        ref = FirebaseDatabase.getInstance().getReference("Items")
         super.onCreate(savedInstanceState)
     }
 
@@ -54,7 +55,6 @@ class ItemsForSaleFragment : Fragment() {
                 R.id.postButton -> mActivity.showPostItemFragment(null)
             }
         }
-        mActivity.checkIfUserIsSignedIn()
         getItemsFromDb()
         return view
     }

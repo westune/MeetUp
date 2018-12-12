@@ -18,7 +18,6 @@ import android.util.TypedValue
 import android.widget.Button
 import com.example.lorenzo.meetup2.MainActivity
 import com.example.lorenzo.meetup2.R
-import com.example.lorenzo.meetup2.fragments.BuyListFragment
 import com.example.lorenzo.meetup2.fragments.ConvosFragment
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
@@ -105,7 +104,6 @@ class ItemRecyclerViewAdapter(private val list: List<Item>, private val activity
                     if (data.exists()) {
                         mSellDataSnapshotList.clear()
                         for(i in data.children) {
-                            //Persons name: Log.d("VALUE", i.ref.key.toString())
                             mSellDataSnapshotList.add(i)
                         }
                         mRecyclerView.adapter = ConvosRecyclerViewAdapter(mSellDataSnapshotList, mActivity, dialog)
@@ -121,7 +119,6 @@ class ItemRecyclerViewAdapter(private val list: List<Item>, private val activity
         bundle.putString("productId", item.id)
         bundle.putString("buyer", activity.sUserName)
         activity.showChatFragment(bundle)
-
     }
 
     override fun getItemCount(): Int {
@@ -163,11 +160,11 @@ class ItemRecyclerViewAdapter(private val list: List<Item>, private val activity
         priceTextView.setText("$" + item.price)
         nameTextView.text = item.name
         descriptionTextView.text = item.description
-        if(item.seller == FirebaseAuth.getInstance().currentUser!!.email.toString()){
+        if(item.seller == mActivity.sUserEmail){
             val deleteButton = Button(activity)
             deleteButton.setText(R.string.delete_item)
-            deleteButton.setBackgroundColor(activity.resources.getColor(R.color.red, null))
-            deleteButton.setTextColor(activity.resources.getColor(R.color.white, null))
+            deleteButton.setBackgroundColor(activity.resources.getColor(R.color.red, mActivity.theme))
+            deleteButton.setTextColor(activity.resources.getColor(R.color.white, mActivity.theme))
             deleteButton.gravity = center
             deleteButton.textAlignment = View.TEXT_ALIGNMENT_CENTER
             deleteButton.setPadding(5, 5, 5, 5)
@@ -192,8 +189,8 @@ class ItemRecyclerViewAdapter(private val list: List<Item>, private val activity
 
             val soldButton = Button(activity)
             soldButton.setText(R.string.mark_item_as_sold)
-            soldButton.setBackgroundColor(activity.resources.getColor(R.color.blue, null))
-            soldButton.setTextColor(activity.resources.getColor(R.color.white, null))
+            soldButton.setBackgroundColor(activity.resources.getColor(R.color.blue, mActivity.theme))
+            soldButton.setTextColor(activity.resources.getColor(R.color.white, mActivity.theme))
             soldButton.gravity = center
             soldButton.textAlignment = View.TEXT_ALIGNMENT_CENTER
             soldButton.setPadding(5, 5, 5, 5)
@@ -224,8 +221,8 @@ class ItemRecyclerViewAdapter(private val list: List<Item>, private val activity
             }
 
             button.setText(R.string.edit_item)
-            button.setBackgroundColor(activity.resources.getColor(R.color.green, null))
-            button.setTextColor(activity.resources.getColor(R.color.white, null))
+            button.setBackgroundColor(activity.resources.getColor(R.color.green, mActivity.theme))
+            button.setTextColor(activity.resources.getColor(R.color.white, mActivity.theme))
             buttonLayout.addView(deleteButton)
             buttonLayout.addView(soldButton)
             button.setOnClickListener{

@@ -45,7 +45,7 @@ class ConvosRecyclerViewAdapter(val list: MutableList<DataSnapshot>, private val
             bundle.putString("productId", itemId)
             bundle.putString("buyer", buyerName)
             mActivity.showChatFragment(bundle)
-            dialog!!.dismiss()
+            if (dialog != null) dialog.dismiss()
         }
     }
 
@@ -57,5 +57,4 @@ class ConvosRecyclerViewAdapter(val list: MutableList<DataSnapshot>, private val
         val name = itemView.findViewById<TextView>(R.id.name)!!
         val layout = itemView.findViewById<LinearLayout>(R.id.layout)!!
     }
-
 }
