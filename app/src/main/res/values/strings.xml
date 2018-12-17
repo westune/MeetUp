@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Meet Up</string>
+    <string name="app_name">Plug</string>
     <string name="title_buy">Buy</string>
     <string name="title_sell">Sell</string>
     <string name="title_messages">Messages</string>
@@ -25,4 +25,5 @@
     <string name="are_you_sure">Are You Sure?</string>
     <string name="permenant">This action is permanent</string>
     <string name="sign_out">Sign Out</string>
+    <string name="motto">Buy Locally</string>
 </resources>

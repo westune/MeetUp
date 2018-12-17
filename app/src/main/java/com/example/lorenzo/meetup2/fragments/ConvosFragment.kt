@@ -54,11 +54,12 @@ class ConvosFragment : Fragment() {
         mRecyclerView = view.findViewById(R.id.recyclerView)
         mRecyclerView.setHasFixedSize(true)
         mRecyclerView.layoutManager = LinearLayoutManager(this.context)
+        mRecyclerView.addOnScrollListener(MainActivity.onScrollListener(mActivity))
         mSellButton = view.findViewById(R.id.sell_button)
         mBuyButton = view.findViewById(R.id.buy_button)
         buyAdapter = ItemRecyclerViewAdapter(
                 buyConvoList.values.toList(), mActivity, fragment, false)
-        sellAdapter = ItemRecyclerViewAdapter(mActivity.sellList, mActivity, this, true)
+        sellAdapter = ItemRecyclerViewAdapter(mActivity.itemsForSaleList, mActivity, this, true)
         setUpButtons()
         checkBuy()
         return view
@@ -69,6 +70,7 @@ class ConvosFragment : Fragment() {
             mRecyclerView.adapter = buyAdapter
         } else {
             getBuyConvos()
+            mRecyclerView.adapter = buyAdapter
         }
 
     }
@@ -76,10 +78,18 @@ class ConvosFragment : Fragment() {
     private fun setUpButtons() {
         mBuyButton.setOnClickListener {
             checkBuy()
+            mBuyButton.setBackgroundColor(resources.getColor(R.color.colorPrimaryDark, activity!!.theme))
+            mBuyButton.setTextColor(resources.getColor(R.color.white, activity!!.theme))
+            mSellButton.setBackgroundColor(resources.getColor(R.color.grey, activity!!.theme))
+            mSellButton.setTextColor(resources.getColor(R.color.black, activity!!.theme))
         }
 
         mSellButton.setOnClickListener {
             mRecyclerView.adapter = sellAdapter
+            mSellButton.setBackgroundColor(resources.getColor(R.color.colorPrimaryDark, activity!!.theme))
+            mSellButton.setTextColor(resources.getColor(R.color.white, activity!!.theme))
+            mBuyButton.setBackgroundColor(resources.getColor(R.color.grey, activity!!.theme))
+            mBuyButton.setTextColor(resources.getColor(R.color.black, activity!!.theme))
 
         }
     }

@@ -26,6 +26,7 @@ import com.squareup.picasso.Picasso
 /*
 resources Used:
 https://stackoverflow.com/questions/5959870/programmatically-set-height-on-layoutparams-as-density-independent-pixels
+Database Queries: https://www.youtube.com/watch?v=WeoryL3XyA4&t=717s
  */
 
 class ItemRecyclerViewAdapter(private val list: List<Item>, private val activity: MainActivity, private val fragment: Fragment, private val sell:Boolean): RecyclerView.Adapter<RecyclerView.ViewHolder>(){
@@ -45,14 +46,11 @@ class ItemRecyclerViewAdapter(private val list: List<Item>, private val activity
         return ViewHolder(view)
     }
 
-
-
-
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val viewHolder:ViewHolder = holder as ViewHolder
         val item:Item = list[position]
         viewHolder.name.text = item.name
-        viewHolder.price.text = item.price
+        viewHolder.price.text = "$${item.price}"
         if(item.imageUrl != "") {
             Picasso.with(activity)
                     .load(item.imageUrl)
@@ -187,6 +185,8 @@ class ItemRecyclerViewAdapter(private val list: List<Item>, private val activity
                 }
             }
 
+
+            //SOLD BUTTON
             val soldButton = Button(activity)
             soldButton.setText(R.string.mark_item_as_sold)
             soldButton.setBackgroundColor(activity.resources.getColor(R.color.blue, mActivity.theme))
@@ -194,8 +194,6 @@ class ItemRecyclerViewAdapter(private val list: List<Item>, private val activity
             soldButton.gravity = center
             soldButton.textAlignment = View.TEXT_ALIGNMENT_CENTER
             soldButton.setPadding(5, 5, 5, 5)
-
-
             soldButton.layoutParams = ViewGroup.LayoutParams(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 75F, activity.resources.displayMetrics).toInt(), ViewGroup.LayoutParams.WRAP_CONTENT)
             soldButton.setOnClickListener {
                 //Mark Item as Sold
@@ -248,11 +246,5 @@ class ItemRecyclerViewAdapter(private val list: List<Item>, private val activity
                 dialog.dismiss()
             }
         }
-
     }
-
-
-
-
-
 }

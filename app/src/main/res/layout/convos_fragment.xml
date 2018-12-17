@@ -18,14 +18,17 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/title_buy" />
-
+                android:text="@string/title_buy"
+                android:background="@color/colorPrimaryDark"
+                android:textColor="@color/white"/>
             <Button
                 android:id="@+id/sell_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/title_sell" />
+                android:text="@string/title_sell"
+                android:background="@color/grey"
+                />
         </LinearLayout>
 
         <android.support.v7.widget.RecyclerView

@@ -21,9 +21,9 @@ import com.google.firebase.database.*
 
 class ItemsForSaleFragment : Fragment() {
 
-    private val LOG = "Items For Sale Fragment"
+    private val TAG = "Items For Sale Fragment"
     private val LAYOUT = R.layout.items_for_sale_fragment
-    private lateinit var recyclerView: RecyclerView
+    private lateinit var mRecyclerView: RecyclerView
     private lateinit var adapter: ItemRecyclerViewAdapter
     private lateinit var ref: DatabaseReference
     private lateinit var postButton: Button
@@ -31,24 +31,24 @@ class ItemsForSaleFragment : Fragment() {
 
 
     override fun onAttach(context: Context?) {
-        Log.d(LOG, "On Attach")
+        Log.d(TAG, "On Attach")
         super.onAttach(context)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        Log.d(LOG, "On Create")
+        Log.d(TAG, "On Create")
         mActivity = activity as MainActivity
-        mActivity.checkIfUserIsSignedIn()
         ref = FirebaseDatabase.getInstance().getReference("Items")
         super.onCreate(savedInstanceState)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        Log.d(LOG, "On Create View")
+        Log.d(TAG, "On Create View")
         val view = inflater.inflate(LAYOUT, container, false)
-        recyclerView = view.findViewById(R.id.recyclerView)
-        recyclerView.setHasFixedSize(true)
-        recyclerView.layoutManager = LinearLayoutManager(this.context)
+        mRecyclerView = view.findViewById(R.id.recyclerView)
+        mRecyclerView.setHasFixedSize(true)
+        mRecyclerView.layoutManager = LinearLayoutManager(this.context)
+        mRecyclerView.addOnScrollListener(MainActivity.onScrollListener(mActivity))
         postButton = view.findViewById(R.id.postButton)
         postButton.setOnClickListener { Button ->
             when (Button.id) {
@@ -60,44 +60,44 @@ class ItemsForSaleFragment : Fragment() {
     }
 
     override fun onStart() {
-        Log.d(LOG, "On Start")
+        Log.d(TAG, "On Start")
         super.onStart()
     }
 
     override fun onResume() {
-        Log.d(LOG, "On Resume")
+        Log.d(TAG, "On Resume")
         super.onResume()
     }
 
     override fun onPause() {
-        Log.d(LOG, "On Pause")
+        Log.d(TAG, "On Pause")
         super.onPause()
     }
 
     override fun onStop() {
-        Log.d(LOG, "On Stop")
+        Log.d(TAG, "On Stop")
         super.onStop()
     }
 
     override fun onDestroy() {
-        Log.d(LOG, "On Destroy")
+        Log.d(TAG, "On Destroy")
         super.onDestroy()
     }
 
     override fun onDetach() {
-        Log.d(LOG, "On Detach")
+        Log.d(TAG, "On Detach")
         super.onDetach()
     }
 
     override fun onDestroyView() {
-        Log.d(LOG, "On Destroy View")
+        Log.d(TAG, "On Destroy View")
         super.onDestroyView()
     }
 
 
     fun getItemsFromDb() {
-        adapter = ItemRecyclerViewAdapter(mActivity.sellList, mActivity, this, false)
-        recyclerView.adapter = adapter
+        adapter = ItemRecyclerViewAdapter(mActivity.itemsForSaleList, mActivity, this, false)
+        mRecyclerView.adapter = adapter
     }
 
 

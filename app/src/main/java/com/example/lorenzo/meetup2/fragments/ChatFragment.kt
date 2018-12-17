@@ -63,6 +63,7 @@ class ChatFragment:Fragment(){
         mMessageRecyclerView = view.findViewById(R.id.messageRecyclerView)
         mMessageRecyclerView.setHasFixedSize(true)
         mMessageRecyclerView.layoutManager = LinearLayoutManager(this.context)
+        mMessageRecyclerView.addOnScrollListener(MainActivity.onScrollListener(mActivity))
         adapter = ChatRecyclerViewAdapter(mMessages, mActivity)
         mMessageRecyclerView.adapter = adapter
         mSendButton = view.findViewById(R.id.sendButton)
@@ -151,5 +152,4 @@ class ChatFragment:Fragment(){
         }
         thread.run()
     }
-
 }

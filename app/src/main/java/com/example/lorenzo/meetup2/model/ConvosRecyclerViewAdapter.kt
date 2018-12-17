@@ -2,6 +2,7 @@ package com.example.lorenzo.meetup2.model
 
 
 import android.app.AlertDialog
+import android.content.res.Resources
 import android.os.Bundle
 import android.support.v7.widget.RecyclerView
 import android.text.Layout
@@ -40,6 +41,7 @@ class ConvosRecyclerViewAdapter(val list: MutableList<DataSnapshot>, private val
         val buyerName = convo.ref.key.toString()
         val itemId = convo.ref.parent!!.key.toString()
         viewHolder.name.text = buyerName
+        viewHolder.name.textAlignment = View.TEXT_ALIGNMENT_CENTER
         holder.layout.setOnClickListener{
             val bundle = Bundle()
             bundle.putString("productId", itemId)

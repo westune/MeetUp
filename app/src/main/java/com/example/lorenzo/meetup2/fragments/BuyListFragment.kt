@@ -110,6 +110,7 @@ class BuyListFragment : Fragment(), AdapterView.OnItemSelectedListener {
         recyclerView = view!!.findViewById(R.id.recyclerView)
         recyclerView.setHasFixedSize(true)
         recyclerView.layoutManager = LinearLayoutManager(this.context)
+        recyclerView.addOnScrollListener(MainActivity.onScrollListener(mActivity))
         return view
     }
 

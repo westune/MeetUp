@@ -14,6 +14,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.webkit.MimeTypeMap
 import android.widget.Button
 import com.example.lorenzo.meetup2.model.Item
@@ -76,6 +77,7 @@ class PostItemFragment : Fragment() {
         mStorageRef = FirebaseStorage.getInstance().getReference("uploads")
         mActivity = activity as MainActivity
         imageLoaded = false
+        mActivity.showBottomNav()
         super.onCreate(savedInstanceState)
     }
 
@@ -90,15 +92,37 @@ class PostItemFragment : Fragment() {
         locationButton = view.findViewById(R.id.locationButton)
         imageButton = view.findViewById(R.id.imageButton)
         setUpButtons()
+        setUpText()
         return view
+    }
+    
+    private fun setUpText(){
+        priceText.setOnFocusChangeListener{_, hasFocus ->
+            if(hasFocus && priceText.text.toString() == "Price") {
+                priceText.setText("")
+            }
+        }
+        nameText.setOnFocusChangeListener{_, hasFocus ->
+            if(hasFocus && nameText.text.toString() == "Title") {
+                nameText.setText("")
+            }
+        }
+        descriptionText.setOnFocusChangeListener{_, hasFocus ->
+            if(hasFocus && descriptionText.text.toString() == "Description") {
+                descriptionText.setText("")
+            }
+        }
+        zipText.setOnFocusChangeListener{_, hasFocus ->
+            if(hasFocus && zipText.text.toString() == "Zip Code") {
+                zipText.setText("")
+            }
+        }
     }
 
 
 
     private fun setUpButtons(){
-        postButton.setBackgroundColor(resources.getColor(R.color.red))
         postButton.setText(R.string.post_button)
-        postButton.setTextColor(resources.getColor(R.color.white))
         postButton.setOnClickListener { Button ->
             when (Button.id) {
                 R.id.postButton -> {
@@ -184,11 +208,11 @@ class PostItemFragment : Fragment() {
         super.onDestroyView()
     }
 
-    private fun checkForEmptyInputs(name: String, description: String, price: String, zip: String): Boolean {
+    private fun checkInputs(name: String, description: String, price: String, zip: String): Boolean {
         when {
-            name.isEmpty() -> nameText.error = "Please Enter a Name"
-            description.isEmpty() -> descriptionText.error = "Please Enter a Description"
-            price.isEmpty() -> priceText.error = "Please Enter a Price"
+            name.isEmpty() || nameText.text.toString() == "Title" -> nameText.error = "Please Enter a Title"
+            description.isEmpty() || descriptionText.text.toString() == "Description" -> descriptionText.error = "Please Enter a Description"
+            price.isEmpty() || priceText.text.toString() == "Price" -> priceText.error = "Please Enter a Price"
             zip.isEmpty() -> zipText.error = "Please Enter a zip"
             else -> return false
         }
@@ -197,7 +221,7 @@ class PostItemFragment : Fragment() {
     }
 
     private fun postItem(name: String, description: String, price: String, zip: String, imageUrl:String) {
-        if (checkForEmptyInputs(name, description, price, zip)) {
+        if (checkInputs(name, description, price, zip)) {
             return
         }
         val ref = FirebaseDatabase.getInstance().getReference("Items")
